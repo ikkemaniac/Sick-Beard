@@ -619,6 +619,7 @@ ConfigMenu = [
     { 'title': 'General',           'path': 'config/general/'          },
     { 'title': 'Search Settings',   'path': 'config/search/'           },
     { 'title': 'Search Providers',  'path': 'config/providers/'        },
+    { 'title': 'Downloaders',       'path': 'config/downloaders/'      },
     { 'title': 'Post Processing',   'path': 'config/postProcessing/'   },
     { 'title': 'Notifications',     'path': 'config/notifications/'    },
 ]
@@ -1443,6 +1444,179 @@ class ConfigNotifications:
         redirect("/config/notifications/")
 
 
+class ConfigDownloaders:
+
+    @cherrypy.expose
+    def index(self):
+        t = PageTemplate(file="config_downloaders.tmpl")
+        t.submenu = ConfigMenu
+        return _munge(t)
+#~
+    #~ @cherrypy.expose
+    #~ def canAddNewznabProvider(self, name):
+#~
+        #~ if not name:
+            #~ return json.dumps({'error': 'Invalid name specified'})
+#~
+        #~ providerDict = dict(zip([x.getID() for x in sickbeard.newznabProviderList], sickbeard.newznabProviderList))
+#~
+        #~ tempProvider = newznab.NewznabProvider(name, '')
+#~
+        #~ if tempProvider.getID() in providerDict:
+            #~ return json.dumps({'error': 'Exists as '+providerDict[tempProvider.getID()].name})
+        #~ else:
+            #~ return json.dumps({'success': tempProvider.getID()})
+#~
+    #~ @cherrypy.expose
+    #~ def saveNewznabProvider(self, name, url, key=''):
+#~
+        #~ if not name or not url:
+            #~ return '0'
+#~
+        #~ if not url.endswith('/'):
+            #~ url = url + '/'
+#~
+        #~ providerDict = dict(zip([x.name for x in sickbeard.newznabProviderList], sickbeard.newznabProviderList))
+#~
+        #~ if name in providerDict:
+            #~ if not providerDict[name].default:
+                #~ providerDict[name].name = name
+                #~ providerDict[name].url = url
+            #~ providerDict[name].key = key
+#~
+            #~ return providerDict[name].getID() + '|' + providerDict[name].configStr()
+#~
+        #~ else:
+#~
+            #~ newProvider = newznab.NewznabProvider(name, url, key)
+            #~ sickbeard.newznabProviderList.append(newProvider)
+            #~ return newProvider.getID() + '|' + newProvider.configStr()
+#~
+#~
+#~
+    #~ @cherrypy.expose
+    #~ def deleteNewznabProvider(self, id):
+#~
+        #~ providerDict = dict(zip([x.getID() for x in sickbeard.newznabProviderList], sickbeard.newznabProviderList))
+#~
+        #~ if id not in providerDict or providerDict[id].default:
+            #~ return '0'
+#~
+        #~ # delete it from the list
+        #~ sickbeard.newznabProviderList.remove(providerDict[id])
+#~
+        #~ if id in sickbeard.PROVIDER_ORDER:
+            #~ sickbeard.PROVIDER_ORDER.remove(id)
+#~
+        #~ return '1'
+#~
+#~
+    #~ @cherrypy.expose
+    #~ def saveProviders(self, nzbmatrix_username=None, nzbmatrix_apikey=None,
+                      #~ nzbs_r_us_uid=None, nzbs_r_us_hash=None, newznab_string=None,
+                      #~ tvtorrents_digest=None, tvtorrents_hash=None,
+                      #~ btn_api_key=None,
+                      #~ newzbin_username=None, newzbin_password=None,
+                      #~ provider_order=None):
+#~
+        #~ results = []
+#~
+        #~ provider_str_list = provider_order.split()
+        #~ provider_list = []
+#~
+        #~ newznabProviderDict = dict(zip([x.getID() for x in sickbeard.newznabProviderList], sickbeard.newznabProviderList))
+#~
+        #~ finishedNames = []
+#~
+        #~ # add all the newznab info we got into our list
+        #~ for curNewznabProviderStr in newznab_string.split('!!!'):
+#~
+            #~ if not curNewznabProviderStr:
+                #~ continue
+#~
+            #~ curName, curURL, curKey = curNewznabProviderStr.split('|')
+#~
+            #~ newProvider = newznab.NewznabProvider(curName, curURL, curKey)
+#~
+            #~ curID = newProvider.getID()
+#~
+            #~ # if it already exists then update it
+            #~ if curID in newznabProviderDict:
+                #~ newznabProviderDict[curID].name = curName
+                #~ newznabProviderDict[curID].url = curURL
+                #~ newznabProviderDict[curID].key = curKey
+            #~ else:
+                #~ sickbeard.newznabProviderList.append(newProvider)
+#~
+            #~ finishedNames.append(curID)
+#~
+        #~ # delete anything that is missing
+        #~ for curProvider in sickbeard.newznabProviderList:
+            #~ if curProvider.getID() not in finishedNames:
+                #~ sickbeard.newznabProviderList.remove(curProvider)
+#~
+        #~ # do the enable/disable
+        #~ for curProviderStr in provider_str_list:
+            #~ curProvider, curEnabled = curProviderStr.split(':')
+            #~ curEnabled = int(curEnabled)
+#~
+            #~ provider_list.append(curProvider)
+#~
+            #~ if curProvider == 'nzbs_r_us':
+                #~ sickbeard.NZBSRUS = curEnabled
+            #~ elif curProvider == 'nzbs_org_old':
+                #~ sickbeard.NZBS = curEnabled
+            #~ elif curProvider == 'nzbmatrix':
+                #~ sickbeard.NZBMATRIX = curEnabled
+            #~ elif curProvider == 'newzbin':
+                #~ sickbeard.NEWZBIN = curEnabled
+            #~ elif curProvider == 'bin_req':
+                #~ sickbeard.BINREQ = curEnabled
+            #~ elif curProvider == 'womble_s_index':
+                #~ sickbeard.WOMBLE = curEnabled
+            #~ elif curProvider == 'ezrss':
+                #~ sickbeard.EZRSS = curEnabled
+            #~ elif curProvider == 'tvtorrents':
+                #~ sickbeard.TVTORRENTS = curEnabled
+            #~ elif curProvider == 'btn':
+                #~ sickbeard.BTN = curEnabled
+            #~ elif curProvider == 'showrss':
+                #~ sickbeard.SHOWRSS = curEnabled
+            #~ elif curProvider == 'kat':
+                #~ sickbeard.KAT = curEnabled
+            #~ elif curProvider == 'dailytvtorrents':
+                #~ sickbeard.DAILYTVTORRENTS = curEnabled
+            #~ elif curProvider == 'iplayer':
+                #~ sickbeard.IPLAYER = curEnabled
+            #~ elif curProvider in newznabProviderDict:
+                #~ newznabProviderDict[curProvider].enabled = bool(curEnabled)
+            #~ else:
+                #~ logger.log(u"don't know what "+curProvider+" is, skipping")
+#~
+        #~ sickbeard.TVTORRENTS_DIGEST = tvtorrents_digest.strip()
+        #~ sickbeard.TVTORRENTS_HASH = tvtorrents_hash.strip()
+#~
+        #~ sickbeard.BTN_API_KEY = btn_api_key.strip()
+#~
+        #~ sickbeard.NZBSRUS_UID = nzbs_r_us_uid.strip()
+        #~ sickbeard.NZBSRUS_HASH = nzbs_r_us_hash.strip()
+#~
+        #~ sickbeard.PROVIDER_ORDER = provider_list
+#~
+        #~ sickbeard.save_config()
+#~
+        #~ if len(results) > 0:
+            #~ for x in results:
+                #~ logger.log(x, logger.ERROR)
+            #~ ui.notifications.error('Error(s) Saving Configuration',
+                        #~ '<br />\n'.join(results))
+        #~ else:
+            #~ ui.notifications.message('Configuration Saved', ek.ek(os.path.join, sickbeard.CONFIG_FILE) )
+#~
+        #~ redirect("/config/providers/")
+
+
+
 class Config:
 
     @cherrypy.expose
@@ -1459,6 +1633,8 @@ class Config:
     postProcessing = ConfigPostProcessing()
 
     providers = ConfigProviders()
+
+    downloaders = ConfigDownloaders()
 
     notifications = ConfigNotifications()
 
