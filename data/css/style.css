@@ -454,9 +454,11 @@ ul#rootDirStaticList li {
 }
 #tabs label.nocheck,
 #tabs div.providerDiv,
+#tabs div.downloaderDiv,
 #tabs  div #customQuality,
 .stepDiv label.nocheck,
 .stepDiv div.providerDiv,
+.stepDiv div.downloaderDiv,
 .stepDiv div #customQuality {
   padding-left: 23px;
 }
@@ -589,7 +591,7 @@ config*.tmpl
   float: left;
   margin-right: 6px;
 }
-#config .nocheck, #config div #customQuality, .metadataDiv, .providerDiv {
+#config .nocheck, #config div #customQuality, .metadataDiv, .providerDiv .downloaderDiv {
   padding-left: 20px;
 }
 #config label span.component-title {
@@ -825,24 +827,28 @@ config_providers.tmpl
 #config-components > h2 {
   border-bottom: 4px solid #ddd;
 }
-#providerOrderList {
+#providerOrderList,
+#downloaderOrderList {
   width: 250px;
   padding-left: 20px;
   list-style-type: none;
 }
-#providerOrderList li {
+#providerOrderList li,
+#downloaderOrderList li {
   padding: 5px;
   margin: 5px 0;
   font-size: 14px;
 }
-#providerOrderList input {
+#providerOrderList input,
+#downloaderOrderList input {
   margin: 0 2px;
 }
 .imgLink img {
   padding: 0 2px 2px;
 }
 /* fix drop target height */
-#providerOrderList .ui-state-highlight {
+#providerOrderList .ui-state-highlight,
+#downloaderOrderList .ui-state-highlight {
   height: 20px;
   line-height: 18px;
 }

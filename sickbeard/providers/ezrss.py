@@ -35,13 +35,13 @@ class EZRSSProvider(generic.TorrentProvider):
     def __init__(self):
 
         generic.TorrentProvider.__init__(self, "EZRSS")
-        
+
         self.supportsBacklog = True
 
         self.cache = EZRSSCache(self)
 
         self.url = 'https://www.ezrss.it/'
-        
+
         # These are backup feeds, tried in order if the main feed fails.
         # (these just provide "latest", no backlog)
         self.backup_feeds = ['https://rss.thepiratebay.se/user/d17c6a45441ce0bc0c057f19057f95e1',
@@ -50,69 +50,69 @@ class EZRSSProvider(generic.TorrentProvider):
 
     def isEnabled(self):
         return sickbeard.EZRSS
-        
+
     def imageName(self):
         return 'ezrss.png'
-      
+
     def getQuality(self, item):
-        
+
         torrent_node = item.getElementsByTagName('torrent')[0]
         filename_node = torrent_node.getElementsByTagName('fileName')[0]
         filename = get_xml_text(filename_node)
 
         quality = Quality.nameQuality(filename)
-        
+
         return quality
 
     def findSeasonResults(self, show, season):
-        
+
         results = {}
-        
+
         if show.air_by_date:
             logger.log(u"EZRSS doesn't support air-by-date backlog because of limitations on their RSS search.", logger.WARNING)
             return results
-        
+
         results = generic.TorrentProvider.findSeasonResults(self, show, season)
-        
+
         return results
     def _get_season_search_strings(self, show, season=None):
-    
+
         params = {}
-    
+
         if not show:
             return params
-        
+
         params['show_name'] = sanitizeSceneName(show.name, ezrss=True).replace('.',' ').encode('utf-8')
-          
+
         if season != None:
             params['season'] = season
-    
+
         return [params]
 
     def _get_episode_search_strings(self, ep_obj):
-    
+
         params = {}
-        
+
         if not ep_obj:
             return params
-                   
+
         params['show_name'] = sanitizeSceneName(ep_obj.show.name, ezrss=True).replace('.',' ').encode('utf-8')
-        
+
         if ep_obj.show.air_by_date:
             params['date'] = str(ep_obj.airdate)
         else:
             params['season'] = ep_obj.season
             params['episode'] = ep_obj.episode
-    
+
         return [params]
 
     def _doSearch(self, search_params, show=None):
-    
+
         params = {"mode": "rss"}
-    
+
         if search_params:
             params.update(search_params)
-      
+
         searchURL = self.url + 'search/index.php?' + urllib.urlencode(params)
 
         logger.log(u"Search string: " + searchURL, logger.DEBUG)
@@ -121,7 +121,7 @@ class EZRSSProvider(generic.TorrentProvider):
 
         if not data:
             return []
-        
+
         try:
             parsedXML = parseString(data)
             items = parsedXML.getElementsByTagName('item')
@@ -129,24 +129,24 @@ class EZRSSProvider(generic.TorrentProvider):
             logger.log(u"Error trying to load EZRSS RSS feed: "+ex(e), logger.ERROR)
             logger.log(u"RSS data: "+data, logger.DEBUG)
             return []
-        
+
         results = []
 
         for curItem in items:
-            
+
             (title, url) = self._get_title_and_url(curItem)
-            
+
             if not title or not url:
                 logger.log(u"The XML returned from the EZRSS RSS feed is incomplete, this result is unusable: "+data, logger.ERROR)
                 continue
-    
+
             results.append(curItem)
 
         return results
 
     def _get_title_and_url(self, item):
         (title, url) = generic.TorrentProvider._get_title_and_url(self, item)
-        
+
         if url and url.startswith(('http://twitter.com/', 'https://twitter.com/')):
             # this feed came from twitter
             #
@@ -162,14 +162,14 @@ class EZRSSProvider(generic.TorrentProvider):
             except ValueError:
                 logger.log(u"Twitter message '%s' could not be split on a http boundary, there'll be no url here, sorry" % (title), logger.MESSAGE)
                 url = None
-            
+
             # Then strip off the leading eztv_it:
             if title.startswith('eztv_it:'):
                 title = title[8:]
-                
+
             # For safety we remove any whitespace too.
             title = title.strip()
-            
+
             logger.log(u"Extracted the title '%s' and url '%s' from the twitter link"%(title, url), logger.DEBUG)
         else:
             # this feed came from ezrss
@@ -177,7 +177,7 @@ class EZRSSProvider(generic.TorrentProvider):
                 torrent_node = item.getElementsByTagName('torrent')[0]
                 filename_node = torrent_node.getElementsByTagName('fileName')[0]
                 filename = get_xml_text(filename_node)
-            
+
                 new_title = self._extract_name_from_filename(filename)
                 if new_title:
                     title = new_title
@@ -188,12 +188,12 @@ class EZRSSProvider(generic.TorrentProvider):
                 # So assume we're working with with a standard rss feed.
                 logger.log(u"IndexError while parsing the ezrss feed, maybe it's just standard RSS? Trying that ...", logger.DEBUG)
                 (title, url) = generic.GenericProvider._get_title_and_url(self, item)
-                
+
         # feedburner adds "[eztv] " to the start of all titles, so trim it off
         if title and title[:7] == "[eztv] ":
             title = title[7:]
             logger.log(u"Trimmed [eztv] from title to get %s" % title, logger.DEBUG)
-            
+
         # ditto VTV:
         if title and title[:6] == "[VTV] ":
             title = title[6:]
@@ -221,26 +221,26 @@ class EZRSSCache(tvcache.TVCache):
 
 
     def _getRSSData(self):
-        
+
         def _feed_is_valid(feed):
             #logger.log(u"Checking feed: " + repr(feed), logger.DEBUG)
             try:
                 if feed is None:
                     logger.log(u"Feed result is empty!", logger.ERROR)
                     return False
-                
+
                 parsedXML = parseString(feed)
-                
+
                 if parsedXML.documentElement.tagName != 'rss':
                     logger.log(u"Resulting XML isn't RSS, not parsing it", logger.ERROR)
                     return False
-                else: 
+                else:
                     items = parsedXML.getElementsByTagName('item')
-                    
+
                     if len(items) > 0:
                         item = items[0]
                         pubDate = get_xml_text(item.getElementsByTagName('pubDate')[0])
-                        
+
                         # pubDate has a timezone, but it makes things much easier if
                         # we ignore it (and we don't need that level of accuracy anyway)
                         pub_date_pieces = pubDate.split(" ")[:-1]
@@ -254,27 +254,27 @@ class EZRSSCache(tvcache.TVCache):
                     else:
                         logger.log(u"Feed contents are rss (during early parse) but are empty, assuming failure.", logger.MESSAGE)
                         return False
-                        
+
             except Exception, e:
                 logger.log(u"Error during early parse of feed: "+ex(e), logger.ERROR)
                 logger.log(u"Feed contents: "+repr(feed), logger.DEBUG)
                 return False
-        
-        
-        
+
+
+
         url = self.provider.url + 'feed/'
-        
+
         all_urls = [url] + self.provider.backup_feeds
         for try_url in all_urls:
             logger.log(u"Trying EZRSS URL: " + try_url, logger.DEBUG)
             data = self.provider.getURL(try_url)
-            
+
             if _feed_is_valid(data):
                 logger.log(u"Success with url: " + try_url, logger.DEBUG)
                 break;
             else:
                 logger.log(u"EZRSS url %s failed" % (try_url), logger.MESSAGE)
-    
+
         else:
             logger.log(u"All EZRSS urls (including backups) have failed.  Sorry.", logger.MESSAGE)
             data = None
@@ -288,7 +288,7 @@ class EZRSSCache(tvcache.TVCache):
         if not title or not url:
             logger.log(u"The XML returned from the EZRSS RSS feed is incomplete, this result is unusable", logger.ERROR)
             return
-        
+
 #        if url and url.startswith('magnet:'):
 #            torrent_url = self.provider.magnetToTorrent(url)
 #            if torrent_url:
@@ -297,7 +297,7 @@ class EZRSSCache(tvcache.TVCache):
 #            else:
 #                logger.log(u"Failed to handle magnet url %s, skipping..." % url, logger.DEBUG)
 #                return
-            
+
         if url and self.provider.urlIsBlacklisted(url):
             logger.log(u"url %s is blacklisted, skipping..." % url, logger.DEBUG)
             return

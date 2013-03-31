@@ -41,9 +41,9 @@ from sickbeard.providers.generic import GenericProvider
 def _downloadResult(result):
     """
     Downloads a result to the appropriate black hole folder.
-    
+
     Returns a bool representing success.
-    
+
     result: SearchResult instance to download.
     """
 
@@ -59,9 +59,9 @@ def _downloadResult(result):
     if result.resultType == "nzb":
         newResult = resProvider.downloadResult(result)
 
-    # if it's an nzb data result 
+    # if it's an nzb data result
     elif result.resultType == "nzbdata":
-        
+
         # get the final file path to the nzb
         fileName = ek.ek(os.path.join, sickbeard.NZB_DIR, result.name + ".nzb")
 
@@ -94,13 +94,13 @@ def _downloadResult(result):
 
     return newResult
 
-def snatchEpisode(result, endStatus=SNATCHED):
+def snatchEpisode(result, endStatus=SNATCHED, show=None):
     """
     Contains the internal logic necessary to actually "snatch" a result that
     has been found.
-    
+
     Returns a bool representing success.
-    
+
     result: SearchResult instance to be snatched.
     endStatus: the episode status that should be used for the episode object once it's snatched.
     """
@@ -117,9 +117,22 @@ def snatchEpisode(result, endStatus=SNATCHED):
             logger.log(u"Unknown NZB action specified in config: " + sickbeard.NZB_METHOD, logger.ERROR)
             dlResult = False
 
-    # torrents are always saved to disk
+    # torrents
     elif result.resultType == "torrent":
-        dlResult = _downloadResult(result)
+        if not show: return False
+        # check if any of downloaders are enabled
+        for dl in sickbeard.downloaders.sortedDownloaderList():
+            logger.log(u"aabb")
+            logger.log(str(dl.isEnabled()))
+            logger.log(str(dl.downloaderType))
+            if dl.isEnabled() and dl.downloaderType == 'torrent':# GenericDownloader.TORRENT:
+                curDownloader = dl
+                #~ logger.log(u"result: %s" % result)
+                #~ logger.log(u"result:::::")
+                #~ logger.log(u"result:::::" + str(show))
+                folderName = os.path.basename(os.path.normpath(show.location))
+                dlResult = dl.downloadResult(result, folderName)
+        #~ dlResult = _downloadResult(result)
     elif result.resultType == 'stream':
         dlResult = _downloadResult(result)
     else:
@@ -205,11 +218,11 @@ def pickBestResult(results, quality_list=None):
     bestResult = None
     for cur_result in results:
         logger.log("Quality of "+cur_result.name+" is "+Quality.qualityStrings[cur_result.quality])
-        
+
         if quality_list and cur_result.quality not in quality_list:
             logger.log(cur_result.name+" is a quality we know we don't want, rejecting it", logger.DEBUG)
             continue
-        
+
         if not bestResult or bestResult.quality < cur_result.quality and cur_result.quality != Quality.UNKNOWN:
             bestResult = cur_result
         elif bestResult.quality == cur_result.quality:
@@ -228,18 +241,18 @@ def pickBestResult(results, quality_list=None):
 def isFinalResult(result):
     """
     Checks if the given result is good enough quality that we can stop searching for other ones.
-    
+
     If the result is the highest quality in both the any/best quality lists then this function
     returns True, if not then it's False
 
     """
-    
+
     logger.log(u"Checking if we should keep searching after we've found "+result.name, logger.DEBUG)
-    
+
     show_obj = result.episodes[0].show
-    
+
     any_qualities, best_qualities = Quality.splitQuality(show_obj.quality)
-    
+
     # if there is a redownload that's higher than this then we definitely need to keep looking
     if best_qualities and result.quality < max(best_qualities):
         return False
@@ -247,13 +260,13 @@ def isFinalResult(result):
     # if there's no redownload that's higher (above) and this is the highest initial download then we're good
     elif any_qualities and result.quality == max(any_qualities):
         return True
-    
+
     elif best_qualities and result.quality == max(best_qualities):
-        
+
         # if this is the best redownload but we have a higher initial download then keep looking
         if any_qualities and result.quality < max(any_qualities):
             return False
-        
+
         # if this is the best redownload and we don't have a higher initial download then we're done
         else:
             return True
@@ -298,7 +311,7 @@ def findEpisode(episode, manualSearch=False):
             logger.log(u"Should we stop searching after finding "+cur_result.name+": "+str(done_searching), logger.DEBUG)
             if done_searching:
                 break
-        
+
         foundResults += curFoundResults
 
         # if we did find a result that's good enough to stop then don't continue
@@ -401,10 +414,10 @@ def findSeason(show, season):
             logger.log(u"No eps from this season are wanted at this quality, ignoring the result of "+bestSeasonNZB.name, logger.DEBUG)
 
         else:
-            
+
             if bestSeasonNZB.provider.providerType == GenericProvider.NZB:
                 logger.log(u"Breaking apart the NZB and adding the individual ones to our results", logger.DEBUG)
-                
+
                 # if not, break it apart and add them as the lowest priority results
                 individualResults = nzbSplitter.splitResult(bestSeasonNZB)
 
@@ -423,7 +436,7 @@ def findSeason(show, season):
 
             # If this is a torrent all we can do is leech the entire torrent, user will have to select which eps not do download in his torrent client
             else:
-                
+
                 # Season result from BTN must be a full-season torrent, creating multi-ep result for it.
                 logger.log(u"Adding multi-ep result for full-season torrent. Set the episodes you don't want to 'don't download' in your torrent client if desired!")
                 epObjs = []

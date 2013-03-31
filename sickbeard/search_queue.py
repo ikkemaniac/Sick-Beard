@@ -32,7 +32,7 @@ RSS_SEARCH = 20
 MANUAL_SEARCH = 30
 
 class SearchQueue(generic_queue.GenericQueue):
-    
+
     def __init__(self):
         generic_queue.GenericQueue.__init__(self)
         self.queue_name = "SEARCHQUEUE"
@@ -80,9 +80,9 @@ class ManualSearchQueueItem(generic_queue.QueueItem):
     def __init__(self, ep_obj):
         generic_queue.QueueItem.__init__(self, 'Manual Search', MANUAL_SEARCH)
         self.priority = generic_queue.QueuePriorities.HIGH
-        
+
         self.ep_obj = ep_obj
-        
+
         self.success = None
 
     def execute(self):
@@ -172,7 +172,7 @@ class BacklogQueueItem(generic_queue.QueueItem):
         generic_queue.QueueItem.__init__(self, 'Backlog', BACKLOG_SEARCH)
         self.priority = generic_queue.QueuePriorities.LOW
         self.thread_name = 'BACKLOG-'+str(show.tvdbid)
-        
+
         self.show = show
         self.segment = segment
 
@@ -195,19 +195,19 @@ class BacklogQueueItem(generic_queue.QueueItem):
 
             statusResults = myDB.select("SELECT status FROM tv_episodes WHERE showid = ? AND airdate >= ? AND airdate <= ?",
                                         [self.show.tvdbid, min_date.toordinal(), max_date.toordinal()])
-            
+
         anyQualities, bestQualities = common.Quality.splitQuality(self.show.quality) #@UnusedVariable
         self.wantSeason = self._need_any_episodes(statusResults, bestQualities)
 
     def execute(self):
-        
+
         generic_queue.QueueItem.execute(self)
 
         results = search.findSeason(self.show, self.segment)
 
         # download whatever we find
         for curResult in results:
-            search.snatchEpisode(curResult)
+            search.snatchEpisode(curResult, show=self.show)
             time.sleep(5)
 
         self.finish()
@@ -215,7 +215,7 @@ class BacklogQueueItem(generic_queue.QueueItem):
     def _need_any_episodes(self, statusResults, bestQualities):
 
         wantSeason = False
-        
+
         # check through the list of statuses to see if we want any
         for curStatusResult in statusResults:
             curCompositeStatus = int(curStatusResult["status"])

@@ -1,5 +1,5 @@
 #import sickbeard
-#from sickbeard.providers.generic import GenericProvider
+#from sickbeard.downloaders.generic import GenericDownloader
 #set global $title="Config - Downloaders"
 #set global $header="Downloaders"
 
@@ -18,45 +18,39 @@
 <div id="config">
 <div id="config-content">
 
-<form id="configForm" action="saveProviders" method="post">
+<form id="configForm" action="saveDownloaders" method="post">
 
             <div id="config-components">
 
                 <div id="core-component-group1" class="component-group clearfix">
 
                     <div class="component-group-desc">
-                        <h3>Provider Priorities</h3>
-                        <p>Check off and drag the providers into the order you want them to be used.</p>
-                        <p>At least one provider is required but two are recommended.</p>
+                        <h3>Downloader Priorities</h3>
+                        <p>Check off and drag the downloaders into the order you want them to be used.</p>
 
-                        <blockquote style="margin: 20px 0;">NZB/Torrent/VOD providers can be toggled in <b><a href="$sbRoot/config/search">Search Settings</a></b></blockquote>
-
-                        <div>
-                            <h4 class="note">*</h4><p class="note">Provider does not support backlog searches at this time.</p>
-                        </div>
+                        <blockquote style="margin: 20px 0;">NZB/Torrent/VOD downloaders can be toggled in <b><a href="$sbRoot/config/search">Search Settings</a></b></blockquote>
                     </div>
 
                     <fieldset class="component-group-list">
-                        <ul id="providerOrderList">
-                        #for $curProvider in $sickbeard.providers.sortedProviderList():
-                            #if $curProvider.providerType == $GenericProvider.NZB and not $sickbeard.USE_NZBS:
+                        <ul id="downloaderOrderList">
+                        #for $curDownloader in $sickbeard.downloaders.sortedDownloaderList():
+                            #if $curDownloader.downloaderType == $GenericDownloader.NZB and not $sickbeard.USE_NZBS:
                                 #continue
-                            #elif $curProvider.providerType == $GenericProvider.TORRENT and not $sickbeard.USE_TORRENTS:
+                            #elif $curDownloader.downloaderType == $GenericDownloader.TORRENT and not $sickbeard.USE_TORRENTS:
                                 #continue
-                            #elif $curProvider.providerType == $GenericProvider.VOD and not $sickbeard.USE_VODS:
+                            #elif $curDownloader.downloaderType == $GenericDownloader.VOD and not $sickbeard.USE_VODS:
                                 #continue
                             #end if
-                            #set $curName = $curProvider.getID()
+                            #set $curName = $curDownloader.getID()
                           <li class="ui-state-default" id="$curName">
-                            <input type="checkbox" id="enable_$curName" class="checkbox provider_enabler" #if $curProvider.isEnabled() then "checked=\"checked\"" else ""#/>
-                            <a href="$curProvider.url" class="imgLink" target="_new"><img src="$sbRoot/images/providers/$curProvider.imageName()" alt="" title="$curProvider.name" width="16" height="16" /></a>
-                            $curProvider.name
-                            #if not $curProvider.supportsBacklog then "*" else ""#
+                            <input type="checkbox" id="enable_$curName" class="checkbox downloader_enabler" #if $curDownloader.isEnabled() then "checked=\"checked\"" else ""#/>
+                            <a href="$curDownloader.url" class="imgLink" target="_new"><img src="$sbRoot/images/downloaders/$curDownloader.imageName()" alt="" title="$curDownloader.name" width="16" height="16" /></a>
+                            $curDownloader.name
                             <span class="ui-icon ui-icon-arrowthick-2-n-s pull-right"></span>
                           </li>
                         #end for
                         </ul>
-                        <input type="hidden" name="provider_order" id="provider_order" value="<%=" ".join([x.getID()+':'+str(int(x.isEnabled())) for x in sickbeard.providers.sortedProviderList()])%>"/>
+                        <input type="hidden" name="downloader_order" id="downloader_order" value="<%=" ".join([x.getID()+':'+str(int(x.isEnabled())) for x in sickbeard.downloaders.sortedDownloaderList()])%>"/>
                         <br/><input type="submit" class="btn config_submitter" value="Save Changes" /><br/>
                     </fieldset>
                 </div><!-- /component-group1 //-->
@@ -64,164 +58,119 @@
                 <div id="core-component-group2" class="component-group clearfix">
 
                     <div class="component-group-desc">
-                        <h3>Configure Built-In Providers</h3>
-                        <p>Check with provider's website on how to obtain an API key if needed.</p>
+                        <h3>Configure Built-In Downloaders</h3>
+                        <p></p>
                     </div>
 
                     <fieldset class="component-group-list">
                         <div class="field-pair">
-                            <label class="clearfix" for="editAProvider">
-                                <span class="component-title jumbo">Configure Provider:</span>
+                            <label class="clearfix" for="editADownloader">
+                                <span class="component-title jumbo">Configure Downloader:</span>
                                 <span class="component-desc">
-                                    #set $provider_config_list = []
-                                    #for $cur_provider in ("nzbs_r_us", "tvtorrents", "btn"):
-                                        #set $cur_provider_obj = $sickbeard.providers.getProviderClass($cur_provider)
-                                        #if $cur_provider_obj.providerType == $GenericProvider.NZB and not $sickbeard.USE_NZBS:
+                                    #set $downloader_config_list = []
+                                    #for $cur_downloader in {"transmission"}:
+                                        #set $cur_downloader_obj = $sickbeard.downloaders.getDownloaderClass($cur_downloader)
+                                        #if $cur_downloader_obj.downloaderType == $GenericDownloader.NZB and not $sickbeard.USE_NZBS:
                                             #continue
-                                        #elif $cur_provider_obj.providerType == $GenericProvider.TORRENT and not $sickbeard.USE_TORRENTS:
+                                        #elif $cur_downloader_obj.downloaderType == $GenericDownloader.TORRENT and not $sickbeard.USE_TORRENTS:
                                             #continue
-                                        #elif $cur_provider_obj.providerType == $GenericProvider.VOD and not $sickbeard.USE_VODS:
+                                        #elif $cur_downloader_obj.downloaderType == $GenericDownloader.VOD and not $sickbeard.USE_VODS:
                                             #continue
                                         #end if
-                                        $provider_config_list.append($cur_provider_obj)
+                                        $downloader_config_list.append($cur_downloader_obj)
                                     #end for
 
-                                    #if $provider_config_list:
-                                    <select id="editAProvider" class="input-medium" >
-                                        #for $cur_provider in $provider_config_list + [$curProvider for $curProvider in $sickbeard.newznabProviderList if $curProvider.default and $curProvider.needs_auth]:
-                                            <option value="$cur_provider.getID()">$cur_provider.name</option>
+                                    #if $downloader_config_list:
+                                    <select id="editADownloader" class="input-medium" >
+                                        #for $cur_downloader in $downloader_config_list + [$curDownloader for $curDownloader in $sickbeard.newznabDownloaderList if $curDownloader.default and $curDownloader.needs_auth]:
+                                            <option value="$cur_downloader.getID()">$cur_downloader.name</option>
                                         #end for
                                     </select>
                                     #else:
-                                    No providers available to configure.
+                                    No downloaders available to configure.
                                     #end if
                                 </span>
                             </label>
                         </div>
 
 
-<!-- start div for editing providers //-->
-#for $curNewznabProvider in [$curProvider for $curProvider in $sickbeard.newznabProviderList if $curProvider.default and $curProvider.needs_auth]:
-                    <div class="providerDiv" id="${curNewznabProvider.getID()}Div">
+<!-- start div for editing downloaders //-->
+#for $curNewznabDownloader in [$curDownloader for $curDownloader in $sickbeard.newznabDownloaderList if $curDownloader.default and $curDownloader.needs_auth]:
+                    <div class="downloaderDiv" id="${curNewznabDownloader.getID()}Div">
                         <div class="field-pair">
                             <label class="clearfix">
-                                <span class="component-title">$curNewznabProvider.name URL</span>
-                                <input class="component-desc" type="text" id="${curNewznabProvider.getID()}_url" value="$curNewznabProvider.url" size="40" disabled/>
+                                <span class="component-title">$curNewznabDownloader.name URL</span>
+                                <input class="component-desc" type="text" id="${curNewznabDownloader.getID()}_url" value="$curNewznabDownloader.url" size="40" disabled/>
                             </label>
                         </div>
                         <div class="field-pair">
                             <label class="clearfix">
-                                <span class="component-title">$curNewznabProvider.name API Key</span>
-                                <input class="component-desc newznab_key" type="text" id="${curNewznabProvider.getID()}_hash" value="$curNewznabProvider.key" size="40" />
+                                <span class="component-title">$curNewznabDownloader.name API Key</span>
+                                <input class="component-desc newznab_key" type="text" id="${curNewznabDownloader.getID()}_hash" value="$curNewznabDownloader.key" size="40" />
                             </label>
                         </div>
-                    </div><!-- /${curNewznabProvider.getID()}Div //-->
+                    </div><!-- /${curNewznabDownloader.getID()}Div //-->
 #end for
 
-                    <div class="providerDiv" id="nzbs_r_usDiv">
+                    <div class="downloaderDiv" id="transmissionDiv">
                         <div class="field-pair">
                             <label class="clearfix">
-                                <span class="component-title">NZBs'R'US UID</span>
-                                <input class="component-desc" type="text" name="nzbs_r_us_uid" value="$sickbeard.NZBSRUS_UID" size="10" />
+                                <span class="component-title">Host:</span>
+                                <input class="component-desc" type="text" name="transmission_host" value="$sickbeard.TRANSMISSION_HOST" size="40" />
                             </label>
                         </div>
                         <div class="field-pair">
                             <label class="clearfix">
-                                <span class="component-title">NZBs'R'US Hash</span>
-                                <input class="component-desc" type="text" name="nzbs_r_us_hash" value="$sickbeard.NZBSRUS_HASH" size="40" />
+                                <span class="component-title">Port:</span>
+                                <input class="component-desc" type="text" name="transmission_port" value="$sickbeard.TRANSMISSION_PORT" size="40" />
                             </label>
                         </div>
-                    </div><!-- /nzbs_r_usDiv //-->
+                        <div class="field-pair">
+                            <label class="clearfix">
+                                <span class="component-title">Username:</span>
+                                <input class="component-desc" type="text" name="transmission_username" value="$sickbeard.TRANSMISSION_USERNAME" size="40" />
+                            </label>
+                        </div>
+                        <div class="field-pair">
+                            <label class="clearfix">
+                                <span class="component-title">Password:</span>
+                                <input class="component-desc" type="password" name="transmission_password" value="$sickbeard.TRANSMISSION_PASSWORD" size="40" />
+                            </label>
+                        </div>
 
-                    <div class="providerDiv" id="tvtorrentsDiv">
                         <div class="field-pair">
                             <label class="clearfix">
-                                <span class="component-title">TvTorrents Digest:</span>
-                                <input class="component-desc" type="text" name="tvtorrents_digest" value="$sickbeard.TVTORRENTS_DIGEST" size="40" />
+                                <span class="component-title">Base directory:</span>
+                                <input class="component-desc" type="text" name="transmission_basedir" id="transmission_basedir" value="$sickbeard.TRANSMISSION_BASEDIR" size="40" />
                             </label>
-                        </div>
-                        <div class="field-pair">
-                            <label class="clearfix">
-                                <span class="component-title">TvTorrents Hash:</span>
-                                <input class="component-desc" type="text" name="tvtorrents_hash" value="$sickbeard.TVTORRENTS_HASH" size="40" />
+                            <label class="nocheck clearfix">
+                                <span class="component-title">&nbsp;</span>
+                                <span class="component-desc">The <b>base</b>directory on the Transmission server where Sick Beard should store your files.</span>
                             </label>
-                        </div>
-                    </div><!-- /tvtorrentsDiv //-->
 
-                    <div class="providerDiv" id="btnDiv">
+                        </div>
+
                         <div class="field-pair">
                             <label class="clearfix">
-                                <span class="component-title">BTN API Key:</span>
-                                <input class="component-desc" type="text" name="btn_api_key" value="$sickbeard.BTN_API_KEY" size="40" />
+                                <span class="component-title">Start paused:</span>
+                                <input type="checkbox" id="transmission_paused" name="transmission_paused" class="checkbox" #if $sickbeard.TRANSMISSION_PAUSED then "checked=\"checked\"" else ""#/>
                             </label>
                         </div>
-                    </div><!-- /btnDiv //-->
 
-<!-- end div for editing providers -->
+                        <div class="field-pair">
+                            <label class="clearfix">
+                                <span class="component-title">Ratio:</span>
+                                <input class="component-desc" type="text" name="transmission_ratio" value="$sickbeard.TRANSMISSION_RATIO" size="40" />
+                            </label>
+                        </div>
+                    </div><!-- /transmissionDiv //-->
+
+<!-- end div for editing downloaders -->
 
                     <input type="submit" class="btn config_submitter" value="Save Changes" /><br/>
 
                     </fieldset>
                 </div><!-- /component-group2 //-->
-
-                <div id="core-component-group3" class="component-group clearfix">
-
-                    <div class="component-group-desc">
-                        <h3>Configure Custom Newznab Providers</h3>
-                        <p>Add and setup custom Newznab providers.</p>
-                        <p>Some built-in Newznab providers are already available above.</p>
-                    </div>
-
-                    <fieldset class="component-group-list">
-                        <div class="field-pair">
-                            <label class="clearfix">
-                                <span class="component-title jumbo">Select Provider:</span>
-                                <span class="component-desc">
-                                    <input type="hidden" name="newznab_string" id="newznab_string" />
-                                    <select id="editANewznabProvider">
-                                        <option value="addNewznab">-- add new provider --</option>
-                                    </select>
-                                </span>
-                            </label>
-                        </div>
-
-<div class="newznabProviderDiv" id="addNewznab">
-                        <div class="field-pair">
-                            <label class="nocheck clearfix">
-                                <span class="component-title">Provider Name</span>
-                                <input class="component-desc" type="text" id="newznab_name" size="40" />
-                            </label>
-                        </div>
-                        <div class="field-pair">
-                            <label class="nocheck clearfix">
-                                <span class="component-title">Site URL</span>
-                                <input class="component-desc" type="text" id="newznab_url" size="40" />
-                            </label>
-                        </div>
-                        <div class="field-pair">
-                            <label class="nocheck clearfix">
-                                <span class="component-title">API Key</span>
-                                <input class="component-desc" type="text" id="newznab_key" size="40" />
-                            </label>
-                            <label class="nocheck clearfix">
-                                <span class="component-title">&nbsp;</span>
-                                <span class="component-desc">(leave blank if not required)</span>
-                            </label>
-                        </div>
-            <div id="newznab_add_div">
-                <input type="button" class="btn newznab_save" id="newznab_add" value="Add" />
-            </div>
-            <div id="newznab_update_div" style="display: none;">
-                <input type="button" class="btn btn-danger newznab_delete" id="newznab_delete" value="Delete" />
-            </div>
-</div>
-
-                    </fieldset>
-                </div><!-- /component-group3 //-->
-
-                <div class="component-group-save">
-                    <input type="submit" class="btn config_submitter" value="Save Changes" />
-                </div><br />
 
             </div><!-- /config-components //-->
 

@@ -29,8 +29,9 @@ import urllib
 from threading import Lock
 
 # apparently py2exe won't build these unless they're imported somewhere
-from sickbeard import providers, metadata
+from sickbeard import providers, metadata, downloaders
 from providers import ezrss, tvtorrents, btn, nzbsrus, newznab, womble, showrss, kat, dailytvtorrents, iplayer
+from downloaders import transmission
 from sickbeard.config import CheckSection, check_setting_int, check_setting_str, ConfigMigrator
 
 from sickbeard import searchCurrent, searchBacklog, showUpdater, versionChecker, properFinder, autoPostProcesser
@@ -84,6 +85,10 @@ providerList = []
 newznabProviderList = []
 metadata_provider_dict = {}
 
+downloaderList = []
+newznabDownloaderList = []
+metadata_downloader_dict = {}
+
 NEWEST_VERSION = None
 NEWEST_VERSION_STRING = None
 VERSION_NOTIFY = None
@@ -127,6 +132,7 @@ QUALITY_DEFAULT = None
 STATUS_DEFAULT = None
 FLATTEN_FOLDERS_DEFAULT = None
 PROVIDER_ORDER = []
+DOWNLOADER_ORDER = []
 
 NAMING_MULTI_EP = None
 NAMING_PATTERN = None
@@ -161,6 +167,15 @@ DAILYTVTORRENTS = False
 TVTORRENTS = False
 TVTORRENTS_DIGEST = None
 TVTORRENTS_HASH = None
+
+TRANSMISSION = False
+TRANSMISSION_HOST = None
+TRANSMISSION_PORT = None
+TRANSMISSION_USERNAME = None
+TRANSMISSION_PASSWORD = None
+TRANSMISSION_PAUSED = False
+TRANSMISSION_BASEDIR = None
+TRANSMISSION_RATIO = None
 
 BTN = False
 BTN_API_KEY = None
@@ -326,6 +341,7 @@ def initialize(consoleLogging=True):
                 PLEX_SERVER_HOST, PLEX_HOST, PLEX_USERNAME, PLEX_PASSWORD, \
                 showUpdateScheduler, __INITIALIZED__, LAUNCH_BROWSER, showList, loadingShowList, \
                 NZBS, NZBS_UID, NZBS_HASH, EZRSS, SHOWRSS, KAT, DAILYTVTORRENTS, TVTORRENTS, TVTORRENTS_DIGEST, TVTORRENTS_HASH, BTN, BTN_API_KEY, TORRENT_DIR, USENET_RETENTION, SOCKET_TIMEOUT, \
+                TRANSMISSION, TRANSMISSION_HOST, TRANSMISSION_PORT, TRANSMISSION_BASEDIR, TRANSMISSION_PASSWORD, TRANSMISSION_PAUSED, TRANSMISSION_RATIO, TRANSMISSION_USERNAME, \
                 SEARCH_FREQUENCY, DEFAULT_SEARCH_FREQUENCY, BACKLOG_SEARCH_FREQUENCY, \
                 QUALITY_DEFAULT, FLATTEN_FOLDERS_DEFAULT, STATUS_DEFAULT, \
                 GROWL_NOTIFY_ONSNATCH, GROWL_NOTIFY_ONDOWNLOAD, TWITTER_NOTIFY_ONSNATCH, TWITTER_NOTIFY_ONDOWNLOAD, \
@@ -336,8 +352,8 @@ def initialize(consoleLogging=True):
                 KEEP_PROCESSED_DIR, TV_DOWNLOAD_DIR, TVDB_BASE_URL, MIN_SEARCH_FREQUENCY, \
                 showQueueScheduler, searchQueueScheduler, ROOT_DIRS, CACHE_DIR, ACTUAL_CACHE_DIR, TVDB_API_PARMS, \
                 NAMING_PATTERN, NAMING_MULTI_EP, NAMING_FORCE_FOLDERS, NAMING_ABD_PATTERN, NAMING_CUSTOM_ABD, \
-                RENAME_EPISODES, properFinderScheduler, PROVIDER_ORDER, autoPostProcesserScheduler, \
-                NZBSRUS, NZBSRUS_UID, NZBSRUS_HASH, WOMBLE, providerList, newznabProviderList, \
+                RENAME_EPISODES, properFinderScheduler, PROVIDER_ORDER, DOWNLOADER_ORDER, autoPostProcesserScheduler, \
+                NZBSRUS, NZBSRUS_UID, NZBSRUS_HASH, WOMBLE, providerList, newznabProviderList, downloaderList, newznabDownloaderList, \
                 EXTRA_SCRIPTS, USE_TWITTER, TWITTER_USERNAME, TWITTER_PASSWORD, TWITTER_PREFIX, \
                 USE_NOTIFO, NOTIFO_USERNAME, NOTIFO_APISECRET, NOTIFO_NOTIFY_ONDOWNLOAD, NOTIFO_NOTIFY_ONSNATCH, \
                 USE_BOXCAR, BOXCAR_USERNAME, BOXCAR_PASSWORD, BOXCAR_NOTIFY_ONDOWNLOAD, BOXCAR_NOTIFY_ONSNATCH, \
@@ -423,6 +439,7 @@ def initialize(consoleLogging=True):
         FLATTEN_FOLDERS_DEFAULT = bool(check_setting_int(CFG, 'General', 'flatten_folders_default', 0))
 
         PROVIDER_ORDER = check_setting_str(CFG, 'General', 'provider_order', '').split()
+        DOWNLOADER_ORDER = check_setting_str(CFG, 'General', 'downloader_order', '').split()
 
         NAMING_PATTERN = check_setting_str(CFG, 'General', 'naming_pattern', '')
         NAMING_ABD_PATTERN = check_setting_str(CFG, 'General', 'naming_abd_pattern', '')
@@ -530,16 +547,35 @@ def initialize(consoleLogging=True):
         newznabProviderList = providers.getNewznabProviderList(newznabData)
         providerList = providers.makeProviderList()
 
+        CheckSection(CFG, 'Transmission')
+        TRANSMISSION =          bool(check_setting_int(CFG, 'Transmission', 'transmission', 0))
+        #~ print "transmission: %s" % TRANSMISSION
+        TRANSMISSION_HOST =     check_setting_str(CFG, 'Transmission', 'transmission_host', '')
+        #~ print "host: %s" % TRANSMISSION_HOST
+        TRANSMISSION_PORT =     check_setting_str(CFG, 'Transmission', 'transmission_port', '')
+        #~ print "port: %s" % TRANSMISSION_PORT
+        TRANSMISSION_USERNAME = check_setting_str(CFG, 'Transmission', 'transmission_username', '')
+        #~ print "user: %s" % TRANSMISSION_USERNAME
+        TRANSMISSION_PASSWORD = check_setting_str(CFG, 'Transmission', 'transmission_password', '')
+        #~ print "pass: %s" % TRANSMISSION_PASSWORD
+        TRANSMISSION_PAUSED =   bool(check_setting_int(CFG, 'Transmission', 'transmission_paused', 0))
+        #~ print "paused: %s" % TRANSMISSION_PAUSED
+        TRANSMISSION_BASEDIR =  check_setting_str(CFG, 'Transmission', 'transmission_basedir', '')
+        #~ print "base: %s" % TRANSMISSION_BASEDIR
+        TRANSMISSION_RATIO =    check_setting_str(CFG, 'Transmission', 'transmission_ratio', '')
+        #~ print "ratio: %s" % TRANSMISSION_RATIO
+        downloaderList = downloaders.makeDownloaderList()
+
         CheckSection(CFG, 'Blackhole')
         NZB_DIR = check_setting_str(CFG, 'Blackhole', 'nzb_dir', '')
         TORRENT_DIR = check_setting_str(CFG, 'Blackhole', 'torrent_dir', '')
-        
+
         CheckSection(CFG, 'SHOWRSS')
         SHOWRSS = bool(check_setting_int(CFG, 'SHOWRSS', 'showrss', 0))
-        
+
         CheckSection(CFG, 'KAT')
         KAT = bool(check_setting_int(CFG, 'KAT', 'kat', 0))
-        
+
         CheckSection(CFG, 'DAILYTVTORRENTS')
         DAILYTVTORRENTS = bool(check_setting_int(CFG, 'DAILYTVTORRENTS', 'dailytvtorrents', 0))
 
@@ -574,7 +610,7 @@ def initialize(consoleLogging=True):
 
         CheckSection(CFG, 'Womble')
         WOMBLE = bool(check_setting_int(CFG, 'Womble', 'womble', 1))
-        
+
         CheckSection(CFG, 'Iplayer')
         IPLAYER = bool(check_setting_int(CFG, 'Iplayer', 'Iplayer', 1))
         IPLAYER_GETIPLAYER_PATH = check_setting_int(CFG, 'Iplayer', 'get_iplayer_path', '')
@@ -1020,16 +1056,16 @@ def save_config():
 
     new_config['EZRSS'] = {}
     new_config['EZRSS']['ezrss'] = int(EZRSS)
-    
+
     new_config['SHOWRSS'] = {}
     new_config['SHOWRSS']['showrss'] = int(SHOWRSS)
-    
+
     new_config['DAILYTVTORRENTS'] = {}
     new_config['DAILYTVTORRENTS']['dailytvtorrents'] = int(DAILYTVTORRENTS)
-    
+
     new_config['KAT'] = {}
     new_config['KAT']['kat'] = int(KAT)
-    
+
     new_config['TVTORRENTS'] = {}
     new_config['TVTORRENTS']['tvtorrents'] = int(TVTORRENTS)
     new_config['TVTORRENTS']['tvtorrents_digest'] = TVTORRENTS_DIGEST
@@ -1059,9 +1095,19 @@ def save_config():
     new_config['Newzbin']['newzbin_username'] = NEWZBIN_USERNAME
     new_config['Newzbin']['newzbin_password'] = NEWZBIN_PASSWORD
 
+    new_config['Transmission'] = {}
+    new_config['Transmission']['transmission'] = int(TRANSMISSION)
+    new_config['Transmission']['transmission_host'] = TRANSMISSION_HOST
+    new_config['Transmission']['transmission_port'] = TRANSMISSION_PORT
+    new_config['Transmission']['transmission_username'] = TRANSMISSION_USERNAME
+    new_config['Transmission']['transmission_password'] = TRANSMISSION_PASSWORD
+    new_config['Transmission']['transmission_paused'] = TRANSMISSION_PAUSED
+    new_config['Transmission']['transmission_basedir'] = TRANSMISSION_BASEDIR
+    new_config['Transmission']['transmission_ratio'] = TRANSMISSION_RATIO
+
     new_config['Womble'] = {}
     new_config['Womble']['womble'] = int(WOMBLE)
-    
+
     new_config['Iplayer'] = {}
     new_config['Iplayer']['Iplayer'] = int(IPLAYER)
 
