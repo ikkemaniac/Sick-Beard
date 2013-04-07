@@ -177,6 +177,9 @@ class EZRSSProvider(generic.TorrentProvider):
                 torrent_node = item.getElementsByTagName('torrent')[0]
                 filename_node = torrent_node.getElementsByTagName('fileName')[0]
                 filename = get_xml_text(filename_node)
+                # prefer magnet over file links
+                magneturi_node = torrent_node.getElementsByTagName('magnetURI')[0]
+                if magneturi_node: url = get_xml_text(magneturi_node)
 
                 new_title = self._extract_name_from_filename(filename)
                 if new_title:
