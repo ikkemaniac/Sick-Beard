@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib, urllib2
+import urllib, urllib2, httplib
 import json
 import re
 from xml.dom.minidom import parseString
@@ -82,7 +82,7 @@ class TransmissionDownloader(generic.TorrentDownloader):
                                     sickbeard.TRANSMISSION_PORT, \
                                     username = sickbeard.TRANSMISSION_USERNAME, \
                                     password = sickbeard.TRANSMISSION_PASSWORD)
-            #~ url = 'magnet:?xt=urn:btih:6f7197ceba1ff005fac6b028f7491182b2d0939e&dn=Touch.S02E10.HDTV.x264-LOL.%5BVTV%5D.mp4&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=udp%3A%2F%2Ftracker.publicbt.com%3A80&tr=udp%3A%2F%2Ftracker.istole.it%3A6969&tr=udp%3A%2F%2Ftracker.ccc.de%3A80'
+
             if 'magnet' in url:
                 logger.log(u"begin", logger.DEBUG)
                 remote_torrent = trpc.add_torrent_uri(url, arguments = params)
@@ -94,9 +94,7 @@ class TransmissionDownloader(generic.TorrentDownloader):
             if torrent_params and remote_torrent is not False:
                 trpc.set_torrent(remote_torrent['torrent-added']['hashString'], torrent_params)
 
-            #~ UNCOMMENT BEFORE RELEASE
-            #~ return True
-            return False
+            return True
         except Exception, err:
             logger.log('Failed to change settings for transfer: %s' % err, logger.ERROR)
             return False
@@ -144,9 +142,9 @@ class TransmissionRPC(object):
             else:
                 logger.log('Unknown failure sending command to Transmission. Return text is: %s' % response['result'], logger.DEBUG)
                 return False
-        #~ except httplib.InvalidURL, err:
-            #~ logger.log('Invalid Transmission host, check your config %s' % err, logger.ERROR)
-            #~ return False
+        except httplib.InvalidURL, err:
+            logger.log('Invalid Transmission host, check your config %s' % err, logger.ERROR)
+            return False
         except urllib2.HTTPError, err:
             if err.code == 401:
                 logger.log('Invalid Transmission Username or Password, check your config', logger.ERROR)

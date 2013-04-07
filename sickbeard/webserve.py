@@ -1452,83 +1452,11 @@ class ConfigDownloaders:
         t = PageTemplate(file="config_downloaders.tmpl")
         t.submenu = ConfigMenu
         return _munge(t)
-#~
-    #~ @cherrypy.expose
-    #~ def canAddNewznabProvider(self, name):
-#~
-        #~ if not name:
-            #~ return json.dumps({'error': 'Invalid name specified'})
-#~
-        #~ providerDict = dict(zip([x.getID() for x in sickbeard.newznabProviderList], sickbeard.newznabProviderList))
-#~
-        #~ tempProvider = newznab.NewznabProvider(name, '')
-#~
-        #~ if tempProvider.getID() in providerDict:
-            #~ return json.dumps({'error': 'Exists as '+providerDict[tempProvider.getID()].name})
-        #~ else:
-            #~ return json.dumps({'success': tempProvider.getID()})
-#~
-    #~ @cherrypy.expose
-    #~ def saveNewznabProvider(self, name, url, key=''):
-#~
-        #~ if not name or not url:
-            #~ return '0'
-#~
-        #~ if not url.endswith('/'):
-            #~ url = url + '/'
-#~
-        #~ providerDict = dict(zip([x.name for x in sickbeard.newznabProviderList], sickbeard.newznabProviderList))
-#~
-        #~ if name in providerDict:
-            #~ if not providerDict[name].default:
-                #~ providerDict[name].name = name
-                #~ providerDict[name].url = url
-            #~ providerDict[name].key = key
-#~
-            #~ return providerDict[name].getID() + '|' + providerDict[name].configStr()
-#~
-        #~ else:
-#~
-            #~ newProvider = newznab.NewznabProvider(name, url, key)
-            #~ sickbeard.newznabProviderList.append(newProvider)
-            #~ return newProvider.getID() + '|' + newProvider.configStr()
-#~
-#~
-#~
-    #~ @cherrypy.expose
-    #~ def deleteNewznabProvider(self, id):
-#~
-        #~ providerDict = dict(zip([x.getID() for x in sickbeard.newznabProviderList], sickbeard.newznabProviderList))
-#~
-        #~ if id not in providerDict or providerDict[id].default:
-            #~ return '0'
-#~
-        #~ # delete it from the list
-        #~ sickbeard.newznabProviderList.remove(providerDict[id])
-#~
-        #~ if id in sickbeard.PROVIDER_ORDER:
-            #~ sickbeard.PROVIDER_ORDER.remove(id)
-#~
-        #~ return '1'
-#~
-#~
 
     @cherrypy.expose
     def saveDownloaders(self, transmission_order=None, transmission_basedir=None, transmission_ratio=None, transmission_password=None,
         transmission_host=None, transmission_port=None, transmission_username=None, transmission_paused=None, downloader_order=None, **kwargs):
 
-        #~ for key in kwargs:
-            #~ print "another keyword arg: %s: %s" % (key, kwargs[key])
-        '''
-        another keyword arg: downloader_order: transmission:1
-        another keyword arg: transmission_ratio: 5
-        another keyword arg: transmission_password: 3
-        another keyword arg: transmission_host: 1
-        another keyword arg: transmission_port: 7
-        another keyword arg: transmission_username: 2
-        another keyword arg: transmission_paused: on
-        another keyword arg: transmission_basedir: 4
-        '''
         try:
             results = []
             downloader_str_list = downloader_order.split()
@@ -1537,7 +1465,6 @@ class ConfigDownloaders:
                 curDownloader, curEnabled = curDownloaderStr.split(':')
                 curEnabled = int(curEnabled)
 
-                #~ print ('downloader: %s ; enabled: %s' % (curDownloader, curEnabled))
                 if curEnabled and curDownloader == 'transmission':
                     sickbeard.TRANSMISSION = curEnabled
                     if not len(transmission_host) > 0:
@@ -1556,27 +1483,20 @@ class ConfigDownloaders:
 
             if transmission_host:
                 sickbeard.TRANSMISSION_HOST = transmission_host
-            #~ print ('host: %s' % sickbeard.TRANSMISSION_HOST)
             if transmission_port:
                 sickbeard.TRANSMISSION_PORT = transmission_port
-            #~ print ('port: %s' % sickbeard.TRANSMISSION_PORT)
             if transmission_username:
                 sickbeard.TRANSMISSION_USERNAME = transmission_username
-            #~ print ('USER: %s' % sickbeard.TRANSMISSION_USERNAME)
             if transmission_password:
                 sickbeard.TRANSMISSION_PASSWORD = transmission_password
-            #~ print ('PASS: %s' % sickbeard.TRANSMISSION_PASSWORD)
             if transmission_paused and transmission_paused == 'on':
                 sickbeard.TRANSMISSION_PAUSED = 1
             else:
                 sickbeard.TRANSMISSION_PAUSED = 0
-            #~ print ('PAUSED: %s' % sickbeard.TRANSMISSION_PAUSED)
             if transmission_basedir:
                 sickbeard.TRANSMISSION_BASEDIR =  transmission_basedir
-            #~ print ('BASEDIR: %s' % sickbeard.TRANSMISSION_BASEDIR)
             if transmission_ratio:
                 sickbeard.TRANSMISSION_RATIO = transmission_ratio
-            #~ print ('RATIO: %s' % sickbeard.TRANSMISSION_RATIO)
 
             sickbeard.save_config()
 

@@ -87,7 +87,6 @@ metadata_provider_dict = {}
 
 downloaderList = []
 newznabDownloaderList = []
-metadata_downloader_dict = {}
 
 NEWEST_VERSION = None
 NEWEST_VERSION_STRING = None

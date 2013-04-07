@@ -119,20 +119,24 @@ def snatchEpisode(result, endStatus=SNATCHED, show=None):
 
     # torrents
     elif result.resultType == "torrent":
-        if not show: return False
+        if not show:
+            logger.log('No show variable passed!', logger.ERROR)
+            return False
+
+        downloaderEnabled = False
         # check if any of downloaders are enabled
         for dl in sickbeard.downloaders.sortedDownloaderList():
-            logger.log(u"aabb")
-            logger.log(str(dl.isEnabled()))
-            logger.log(str(dl.downloaderType))
             if dl.isEnabled() and dl.downloaderType == 'torrent':# GenericDownloader.TORRENT:
+                downloaderEnabled = True
                 curDownloader = dl
-                #~ logger.log(u"result: %s" % result)
-                #~ logger.log(u"result:::::")
-                #~ logger.log(u"result:::::" + str(show))
+                # get tv series folder name
                 folderName = os.path.basename(os.path.normpath(show.location))
                 dlResult = dl.downloadResult(result, folderName)
-        #~ dlResult = _downloadResult(result)
+
+        if not downloaderEnabled:
+            # fallback
+            dlResult = _downloadResult(result)
+
     elif result.resultType == 'stream':
         dlResult = _downloadResult(result)
     else:
