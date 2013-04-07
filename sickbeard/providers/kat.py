@@ -29,7 +29,7 @@ import generic
 from sickbeard.common import Quality, USER_AGENT
 from sickbeard import logger
 from sickbeard import tvcache
-from sickbeard import helpers
+from sickbeard.helpers import sanitizeSceneName, get_xml_text
 from sickbeard.exceptions import ex
 
 class KATProvider(generic.TorrentProvider):
@@ -58,7 +58,7 @@ class KATProvider(generic.TorrentProvider):
         
         # I think the only place we can get anything resembing the filename is in 
         # the title
-        filename = helpers.get_xml_text(item.getElementsByTagName('title')[0])
+        filename = get_xml_text(item.getElementsByTagName('title')[0])
 
         quality = Quality.nameQuality(filename)
         
@@ -81,9 +81,9 @@ class KATProvider(generic.TorrentProvider):
     
         if not show:
             return params
-        
-        params['show_name'] = helpers.sanitizeSceneName(show.name).replace('.',' ').encode('utf-8')
-          
+
+        params['show_name'] = sanitizeSceneName(show.name).replace('.',' ').encode('utf-8')
+
         if season != None:
             params['season'] = season
     
@@ -95,9 +95,9 @@ class KATProvider(generic.TorrentProvider):
         
         if not ep_obj:
             return params
-                   
-        params['show_name'] = helpers.sanitizeSceneName(ep_obj.show.name).replace('.',' ').encode('utf-8')
-        
+
+        params['show_name'] = sanitizeSceneName(ep_obj.show.name).replace('.',' ').encode('utf-8')
+
         if ep_obj.show.air_by_date:
             params['date'] = str(ep_obj.airdate)
         else:
@@ -253,8 +253,11 @@ class KATProvider(generic.TorrentProvider):
     def _get_title_and_url(self, item):
         #(title, url) = generic.TorrentProvider._get_title_and_url(self, item)
 
-        title = helpers.get_xml_text(item.getElementsByTagName('title')[0])
+        title = get_xml_text(item.getElementsByTagName('title')[0])
         url = item.getElementsByTagName('enclosure')[0].getAttribute('url').replace('&amp;','&')
+        # prefer magnet over file links
+        magneturi_node = item.getElementsByTagName('torrent:magnetURI')[0]
+        if magneturi_node: url = get_xml_text(magneturi_node)
 
         return (title, url)
 
