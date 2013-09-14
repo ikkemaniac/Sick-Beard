@@ -153,6 +153,11 @@ USENET_RETENTION = None
 DOWNLOAD_PROPERS = None
 PREFER_MAGNETS = None
 
+TRANSMISSION_ADDRESS = None
+TRANSMISSION_PORT = None
+TRANSMISSION_USER = None
+TRANSMISSION_PASS = None
+
 SEARCH_FREQUENCY = None
 BACKLOG_SEARCH_FREQUENCY = 21
 MIN_SEARCH_FREQUENCY = 10
@@ -381,7 +386,8 @@ def initialize(consoleLogging=True):
                 USE_BANNER, USE_LISTVIEW, METADATA_XBMC, METADATA_MEDIABROWSER, METADATA_PS3, METADATA_SYNOLOGY, metadata_provider_dict, \
                 NEWZBIN, NEWZBIN_USERNAME, NEWZBIN_PASSWORD, GIT_PATH, MOVE_ASSOCIATED_FILES, \
                 COMING_EPS_LAYOUT, COMING_EPS_SORT, COMING_EPS_DISPLAY_PAUSED, METADATA_WDTV, METADATA_TIVO, IGNORE_WORDS, CREATE_MISSING_SHOW_DIRS, \
-                ADD_SHOWS_WO_DIR, ANON_REDIRECT
+                ADD_SHOWS_WO_DIR, ANON_REDIRECT, \
+                TRANSMISSION_ADDRESS, TRANSMISSION_PORT, TRANSMISSION_USER, TRANSMISSION_PASS
 
         if __INITIALIZED__:
             return False
@@ -568,20 +574,26 @@ def initialize(consoleLogging=True):
         CheckSection(CFG, 'Newznab')
         newznabData = check_setting_str(CFG, 'Newznab', 'newznab_data', '')
         newznabProviderList = providers.getNewznabProviderList(newznabData)
-        
+
         CheckSection(CFG, 'AnyRss')
         anyRssData = check_setting_str(CFG, 'AnyRss', 'anyrss_data', '')
         anyRssProviderList = providers.getAnyRssProviderList(anyRssData)
-        
+
         providerList = providers.makeProviderList()
 
         CheckSection(CFG, 'Blackhole')
         NZB_DIR = check_setting_str(CFG, 'Blackhole', 'nzb_dir', '')
         TORRENT_DIR = check_setting_str(CFG, 'Blackhole', 'torrent_dir', '')
-        
+
+        CheckSection(CFG, 'Transmission')
+        TRANSMISSION_ADDRESS = check_setting_str(CFG, 'Transmission', 'address', 'localhost')
+        TRANSMISSION_PORT = check_setting_int(CFG, 'Transmission', 'port', 9091)
+        TRANSMISSION_USER = check_setting_str(CFG, 'Transmission', 'user', '')
+        TRANSMISSION_PASS = check_setting_str(CFG, 'Transmission', 'pass', '')
+
         CheckSection(CFG, 'SHOWRSS')
         SHOWRSS = bool(check_setting_int(CFG, 'SHOWRSS', 'showrss', 1))
-        
+
         CheckSection(CFG, 'KAT')
         KAT = bool(check_setting_int(CFG, 'KAT', 'kat', 0))
 
@@ -623,7 +635,7 @@ def initialize(consoleLogging=True):
 
         CheckSection(CFG, 'Womble')
         WOMBLE = bool(check_setting_int(CFG, 'Womble', 'womble', 0))
-        
+
         CheckSection(CFG, 'Iplayer')
         IPLAYER = bool(check_setting_int(CFG, 'Iplayer', 'Iplayer', 0))
         IPLAYER_GETIPLAYER_PATH = check_setting_str(CFG, 'Iplayer', 'get_iplayer_path', '')
@@ -753,7 +765,7 @@ def initialize(consoleLogging=True):
         NMA_NOTIFY_ONDOWNLOAD = bool(check_setting_int(CFG, 'NMA', 'nma_notify_ondownload', 0))
         NMA_API = check_setting_str(CFG, 'NMA', 'nma_api', '')
         NMA_PRIORITY = check_setting_str(CFG, 'NMA', 'nma_priority', "0")
-        
+
         lt_log_messages = []
         lt_log_messages.append((u'importing downloader', logger.DEBUG))
         from sickbeard import downloader
@@ -772,7 +784,7 @@ def initialize(consoleLogging=True):
 
         # start up all the threads
         logger.sb_log_instance.initLogging(consoleLogging=consoleLogging)
-        
+
         # Now that logging is started, we can log any messages from the downloader import above
         for m in lt_log_messages:
             logger.log(m[0], m[1])
@@ -837,7 +849,7 @@ def initialize(consoleLogging=True):
                                                                       threadName="BACKLOG",
                                                                       runImmediately=True)
         backlogSearchScheduler.action.cycleTime = BACKLOG_SEARCH_FREQUENCY
-        
+
         torrentProcessScheduler = scheduler.Scheduler(downloader.TorrentProcessHandler(),
                                                      cycleTime=datetime.timedelta(seconds=5),
                                                      threadName="TORRENTHANDLER",
@@ -886,7 +898,7 @@ def start():
 
             # start the proper finder
             autoPostProcesserScheduler.thread.start()
-            
+
             # thread for controlling running torrents
             torrentProcessScheduler.thread.start()
 
@@ -907,7 +919,7 @@ def halt():
             logger.log(u"Aborting all threads")
 
             # abort all the threads
-            
+
             # we *start* by sending an early notification to libtorrent, b/c it
             # will probably need to save state etc.
             torrentProcessScheduler.action.shutDownImmediate = True
@@ -968,7 +980,7 @@ def halt():
                 properFinderScheduler.thread.join(10)
             except:
                 pass
-            
+
             torrentProcessScheduler.abort = True
             logger.log(u"Waiting for the %s thread to exit" % (torrentProcessScheduler.threadName))
             try:
@@ -1136,18 +1148,24 @@ def save_config():
     new_config['Blackhole']['nzb_dir'] = NZB_DIR
     new_config['Blackhole']['torrent_dir'] = TORRENT_DIR
 
+    new_config['Transmission'] = {}
+    new_config['Transmission']['address'] = TRANSMISSION_ADDRESS
+    new_config['Transmission']['port'] = TRANSMISSION_PORT
+    new_config['Transmission']['user'] = TRANSMISSION_USER
+    new_config['Transmission']['pass'] = TRANSMISSION_PASS
+
     new_config['EZRSS'] = {}
     new_config['EZRSS']['ezrss'] = int(EZRSS)
-    
+
     new_config['SHOWRSS'] = {}
     new_config['SHOWRSS']['showrss'] = int(SHOWRSS)
 
     new_config['PUBLICHD'] = {}
     new_config['PUBLICHD']['publichd'] = int(PUBLICHD)
-    
+
     new_config['KAT'] = {}
     new_config['KAT']['kat'] = int(KAT)
-    
+
     new_config['TVTORRENTS'] = {}
     new_config['TVTORRENTS']['tvtorrents'] = int(TVTORRENTS)
     new_config['TVTORRENTS']['tvtorrents_digest'] = TVTORRENTS_DIGEST
@@ -1316,7 +1334,7 @@ def save_config():
 
     new_config['Newznab'] = {}
     new_config['Newznab']['newznab_data'] = '!!!'.join([x.configStr() for x in newznabProviderList])
-    
+
     new_config['AnyRss'] = {}
     new_config['AnyRss']['anyrss_data'] = '!!!'.join([x.configStr() for x in anyRssProviderList])
 
