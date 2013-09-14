@@ -558,7 +558,7 @@ class TorrentProvider(GenericProvider):
         # magnet link fixed, just call the base class
         return GenericProvider.getURL(self, url, headers)
 
-    def downloadResult(self, result):
+    def downloadResult(self, result, download_dir=None):
         """
         Overridden to handle magnet links (using multiple fallbacks), and now libtorrent
         downloads also.

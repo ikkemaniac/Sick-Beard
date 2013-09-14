@@ -38,7 +38,7 @@ from sickbeard import providers
 from sickbeard.exceptions import ex
 from sickbeard.providers.generic import GenericProvider
 
-def _downloadResult(result):
+def _downloadResult(result, download_dir=None):
     """
     Downloads a result to the appropriate black hole folder.
     
@@ -80,7 +80,7 @@ def _downloadResult(result):
             newResult = False
 
     elif resProvider.providerType == "torrent":
-        newResult = resProvider.downloadResult(result)
+        newResult = resProvider.downloadResult(result, download_dir=download_dir)
 
     elif resProvider.providerType == GenericProvider.VOD:
         newResult = resProvider.downloadResult(result)
@@ -94,7 +94,7 @@ def _downloadResult(result):
 
     return newResult
 
-def snatchEpisode(result, endStatus=SNATCHED):
+def snatchEpisode(result, endStatus=SNATCHED, download_dir=None):
     """
     Contains the internal logic necessary to actually "snatch" a result that
     has been found.
@@ -119,7 +119,7 @@ def snatchEpisode(result, endStatus=SNATCHED):
 
     # torrents are always saved to disk
     elif result.resultType == "torrent":
-        dlResult = _downloadResult(result)
+        dlResult = _downloadResult(result, download_dir=download_dir)
     elif result.resultType == 'stream':
         dlResult = _downloadResult(result)
     else:

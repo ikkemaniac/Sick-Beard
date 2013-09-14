@@ -103,7 +103,7 @@ class ManualSearchQueueItem(generic_queue.QueueItem):
 
             # just use the first result for now
             logger.log(u"Downloading episode from " + foundEpisode.url)
-            result = search.snatchEpisode(foundEpisode)
+            result = search.snatchEpisode(foundEpisode, download_dir=self.ep_obj._location)
             providerModule = foundEpisode.provider
             if not result:
                 ui.notifications.error('Error while attempting to snatch ' + foundEpisode.name + ', check your logs')
@@ -211,7 +211,7 @@ class BacklogQueueItem(generic_queue.QueueItem):
 
         # download whatever we find
         for curResult in results:
-            search.snatchEpisode(curResult)
+            search.snatchEpisode(curResult, download_dir=self.show._location)
             time.sleep(5)
 
         self.finish()

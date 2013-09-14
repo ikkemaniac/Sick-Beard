@@ -240,7 +240,7 @@ class ProperFinder():
                 result.quality = curProper.quality
 
                 # snatch it
-                downloadResult = search.snatchEpisode(result, SNATCHED_PROPER)
+                downloadResult = search.snatchEpisode(result, SNATCHED_PROPER, download_dir=epObj._location)
 
                 return downloadResult
 
