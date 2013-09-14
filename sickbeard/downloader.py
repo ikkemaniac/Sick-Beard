@@ -41,6 +41,21 @@ try:
 except ImportError:
     logger.log('libtorrent import failed, functionality will not be available', logger.MESSAGE)
 
+TRANSMISSIONRPC_AVAILABLE = False
+
+try:
+    #https://bitbucket.org/blueluna/transmissionrpc/wiki/Home
+    import transmissionrpc as tr
+    if (float(tr.__version__)) < (0.16):
+        logger.log(u'The version of transmissionrpc you have installed "' +
+                   tr.__version__ + '", is too old for use with sickbeard.  ' +
+                   'Version 0.7 or later required.', logger.MESSAGE)
+    else:
+        logger.log('transmissionrpc import succeeded, transmissionrpc is available', logger.MESSAGE)
+        TRANSMISSIONRPC_AVAILABLE = True
+except ImportError:
+    logger.log('transmissionrpc import failed, functionality will not be available', logger.MESSAGE)
+
 # the number of seconds we wait after adding a torrent to see signs of download beginning
 TORRENT_START_WAIT_TIMEOUT_SECS = 120
 

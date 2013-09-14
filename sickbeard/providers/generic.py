@@ -566,9 +566,6 @@ class TorrentProvider(GenericProvider):
         downloads also.
         """
         logger.log(u"Downloading a result from " + self.name + " at " + result.url)
-        if download_dir is not None:
-            logger.log(u"Downloading a result to '" + download_dir + "'", logger.MESSAGE)
-            logger.log(u"IKKE ; " + sickbeard.TRANSMISSION_ADDRESS + " - " + str(sickbeard.TRANSMISSION_PORT) + " - " + sickbeard.TRANSMISSION_USER + " - " + sickbeard.TRANSMISSION_PASS, logger.MESSAGE)
 
         if sickbeard.USE_LIBTORRENT:
             # libtorrent can download torrent files from urls, but it's probably safer for us
@@ -590,14 +587,41 @@ class TorrentProvider(GenericProvider):
             else:
                 logger.log(u'Failed to retrieve torrent from "%s"' % (result.url), logger.ERROR)
                 return False
+
+        elif sickbeard.USE_TRANSMISSION:
+
+            logger.log(u'Using Transmission RPC with torrent link: ' + result.url, logger.DEBUG)
+            try:
+                # Transmission
+                tc = trpc.Client(address=sickbeard.TRANSMISSION_HOST , \
+                                        port=sickbeard.TRANSMISSION_PORT, \
+                                        user=sickbeard.TRANSMISSION_USER, \
+                                        password=sickbeard.TRANSMISSION_PASSWORD)
+
+                # transmissions default download dir (server side path!)
+                #~ transmission_download_dir = os.path.normpath(tc.session_stats().download_dir)
+
+                # sickbeards TVShow directory
+                tvshow_basename = os.path.basename(os.path.normpath(download_dir))
+
+                # download dir
+                show_dir = os.path.join(sickbeard.TRANSMISSION_DOWNLOAD_DIR, tvshow_basename)
+
+                logger.log(u"Downloading a result to '" + show_dir + "'")
+
+                # add torrent
+                tc.add_uri(str(result.url), download_dir=str(show_dir))
+                return True
+
+            except Exception as e:
+                logger.log(u'Transmission error: ' + str(e), logger.ERROR)
+                return False
+
         else:
             # Ye olde way, using blackhole ...
-            tc = trpc.Client(address=sickbeard.TRANSMISSION_ADDRESS , \
-                                    port=sickbeard.TRANSMISSION_PORT, \
-                                    user=sickbeard.TRANSMISSION_USER, \
-                                    password=sickbeard.TRANSMISSION_PASS)
 
             if result.url and result.url.startswith('magnet:'):
+
                 torrent_hash = self.getHashFromMagnet(result.url)
                 if torrent_hash:
                     urls = [url_fmt % torrent_hash for url_fmt in MAGNET_TO_TORRENT_URLS]
@@ -632,7 +656,6 @@ class TorrentProvider(GenericProvider):
                         return False
 
                     logger.log(u"Success with url: " + url, logger.DEBUG)
-                    tc.add(base64.b64encode(data), download_dir=download_dir)
                     return True
             else:
                 logger.log(u"All d/l urls have failed.  Sorry.", logger.MESSAGE)

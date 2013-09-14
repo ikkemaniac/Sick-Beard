@@ -153,10 +153,15 @@ USENET_RETENTION = None
 DOWNLOAD_PROPERS = None
 PREFER_MAGNETS = None
 
-TRANSMISSION_ADDRESS = None
+TORRENT_METHOD = None
+
+USE_TRANSMISSION = False
+TRANSMISSIONRPC_AVAILABLE = False
+TRANSMISSION_HOST = None
 TRANSMISSION_PORT = None
 TRANSMISSION_USER = None
-TRANSMISSION_PASS = None
+TRANSMISSION_PASSWORD = None
+TRANSMISSION_DOWNLOAD_DIR = None
 
 SEARCH_FREQUENCY = None
 BACKLOG_SEARCH_FREQUENCY = 21
@@ -349,7 +354,7 @@ def initialize(consoleLogging=True):
     with INIT_LOCK:
 
         global LOG_DIR, WEB_PORT, WEB_LOG, WEB_ROOT, WEB_USERNAME, WEB_PASSWORD, WEB_HOST, WEB_IPV6, USE_API, API_KEY, ENABLE_HTTPS, HTTPS_CERT, HTTPS_KEY, \
-                USE_NZBS, USE_TORRENTS, NZB_METHOD, NZB_DIR, DOWNLOAD_PROPERS, \
+                USE_NZBS, USE_TORRENTS, NZB_METHOD, NZB_DIR, DOWNLOAD_PROPERS, TORRENT_METHOD, \
                 USE_VODS, IPLAYER, IPLAYER_GETIPLAYER_PATH, IPLAYER_EXTRA_PARAMS, \
                 SAB_USERNAME, SAB_PASSWORD, SAB_APIKEY, SAB_CATEGORY, SAB_HOST, \
                 NZBGET_PASSWORD, NZBGET_CATEGORY, NZBGET_HOST, currentSearchScheduler, backlogSearchScheduler, \
@@ -387,7 +392,7 @@ def initialize(consoleLogging=True):
                 NEWZBIN, NEWZBIN_USERNAME, NEWZBIN_PASSWORD, GIT_PATH, MOVE_ASSOCIATED_FILES, \
                 COMING_EPS_LAYOUT, COMING_EPS_SORT, COMING_EPS_DISPLAY_PAUSED, METADATA_WDTV, METADATA_TIVO, IGNORE_WORDS, CREATE_MISSING_SHOW_DIRS, \
                 ADD_SHOWS_WO_DIR, ANON_REDIRECT, \
-                TRANSMISSION_ADDRESS, TRANSMISSION_PORT, TRANSMISSION_USER, TRANSMISSION_PASS
+                TRANSMISSION_HOST, TRANSMISSION_PORT, TRANSMISSION_USER, TRANSMISSION_PASSWORD, TRANSMISSIONRPC_AVAILABLE, USE_TRANSMISSION, TRANSMISSION_DOWNLOAD_DIR
 
         if __INITIALIZED__:
             return False
@@ -483,6 +488,10 @@ def initialize(consoleLogging=True):
         NZB_METHOD = check_setting_str(CFG, 'General', 'nzb_method', 'blackhole')
         if NZB_METHOD not in ('blackhole', 'sabnzbd', 'nzbget'):
             NZB_METHOD = 'blackhole'
+
+        TORRENT_METHOD = check_setting_str(CFG, 'General', 'torrent_method', 'blackhole')
+        if TORRENT_METHOD not in ('blackhole', 'libtorrent', 'transmissionrpc'):
+            TORRENT_METHOD = 'blackhole'
 
         DOWNLOAD_PROPERS = bool(check_setting_int(CFG, 'General', 'download_propers', 1))
         USENET_RETENTION = check_setting_int(CFG, 'General', 'usenet_retention', 500)
@@ -586,10 +595,11 @@ def initialize(consoleLogging=True):
         TORRENT_DIR = check_setting_str(CFG, 'Blackhole', 'torrent_dir', '')
 
         CheckSection(CFG, 'Transmission')
-        TRANSMISSION_ADDRESS = check_setting_str(CFG, 'Transmission', 'address', 'localhost')
+        TRANSMISSION_HOST = check_setting_str(CFG, 'Transmission', 'host', 'localhost')
         TRANSMISSION_PORT = check_setting_int(CFG, 'Transmission', 'port', 9091)
         TRANSMISSION_USER = check_setting_str(CFG, 'Transmission', 'user', '')
-        TRANSMISSION_PASS = check_setting_str(CFG, 'Transmission', 'pass', '')
+        TRANSMISSION_PASSWORD = check_setting_str(CFG, 'Transmission', 'pass', '')
+        TRANSMISSION_DOWNLOAD_DIR = check_setting_str(CFG, 'Transmission', 'download_dir', '/tmp')
 
         CheckSection(CFG, 'SHOWRSS')
         SHOWRSS = bool(check_setting_int(CFG, 'SHOWRSS', 'showrss', 1))
@@ -772,6 +782,12 @@ def initialize(consoleLogging=True):
         LIBTORRENT_AVAILABLE = downloader.LIBTORRENT_AVAILABLE
         lt_log_messages.append((u'libtorrent is %savailable' % ('' if LIBTORRENT_AVAILABLE else 'NOT '),
                    logger.MESSAGE))
+
+        TRANSMISSIONRPC_AVAILABLE = downloader.TRANSMISSIONRPC_AVAILABLE
+        lt_log_messages.append((u'transmissionrpc is %savailable' % ('' if TRANSMISSIONRPC_AVAILABLE else 'NOT '),
+                   logger.MESSAGE))
+        USE_TRANSMISSION = bool(check_setting_int(CFG, 'Transmission', 'use_transmission', 0)) and TRANSMISSIONRPC_AVAILABLE
+
         CheckSection(CFG, 'Libtorrent')
         USE_LIBTORRENT = bool(check_setting_int(CFG, 'Libtorrent', 'use_libtorrent', 1)) and LIBTORRENT_AVAILABLE
         LIBTORRENT_WORKING_DIR = check_setting_str(CFG, 'Libtorrent', 'working_dir', os.path.join(DATA_DIR, 'lt_working_dir'))
@@ -1107,6 +1123,7 @@ def save_config():
     new_config['General']['use_torrents'] = int(USE_TORRENTS)
     new_config['General']['use_vods'] = int(USE_VODS)
     new_config['General']['nzb_method'] = NZB_METHOD
+    new_config['General']['torrent_method'] = TORRENT_METHOD
     new_config['General']['usenet_retention'] = int(USENET_RETENTION)
     new_config['General']['search_frequency'] = int(SEARCH_FREQUENCY)
     new_config['General']['download_propers'] = int(DOWNLOAD_PROPERS)
@@ -1149,10 +1166,12 @@ def save_config():
     new_config['Blackhole']['torrent_dir'] = TORRENT_DIR
 
     new_config['Transmission'] = {}
-    new_config['Transmission']['address'] = TRANSMISSION_ADDRESS
+    new_config['Transmission']['use_transmission'] = int(USE_TRANSMISSION)
+    new_config['Transmission']['host'] = TRANSMISSION_HOST
     new_config['Transmission']['port'] = TRANSMISSION_PORT
     new_config['Transmission']['user'] = TRANSMISSION_USER
-    new_config['Transmission']['pass'] = TRANSMISSION_PASS
+    new_config['Transmission']['pass'] = TRANSMISSION_PASSWORD
+    new_config['Transmission']['download_dir'] = TRANSMISSION_DOWNLOAD_DIR
 
     new_config['EZRSS'] = {}
     new_config['EZRSS']['ezrss'] = int(EZRSS)

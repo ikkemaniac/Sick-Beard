@@ -18,7 +18,7 @@
 <form id="configForm" action="saveSearch" method="post">
 
             <div id="config-components">
-                
+
                 <div id="core-component-group1" class="component-group clearfix">
 
                     <div class="component-group-desc">
@@ -34,7 +34,7 @@
                                 <span class="component-desc">Replace original download with "Proper/Repack" if nuked?</span>
                             </label>
                         </div>
-                        
+
                         <div class="field-pair">
                             <label class="nocheck clearfix">
                                 <span class="component-title">Search Frequency</span>
@@ -45,7 +45,7 @@
                                 <span class="component-desc">Time in minutes between searches (eg. 60)</span>
                             </label>
                         </div>
-                        
+
                         <div class="field-pair">
                             <label class="nocheck clearfix">
                                 <span class="component-title">Blacklisted Words (IGNORE_WORDS)</span>
@@ -64,7 +64,7 @@ $ignore_word
 
                         <div class="clearfix"></div>
                         <input type="submit" class="btn config_submitter" value="Save Changes" /><br/>
-                        
+
                     </fieldset>
                 </div><!-- /component-group1 //-->
 
@@ -143,7 +143,7 @@ $ignore_word
                                     <span class="component-desc">(eg. http://localhost:8000/)</span>
                                 </label>
                             </div>
-                            
+
                             <div class="field-pair">
                                 <label class="nocheck clearfix">
                                     <span class="component-title">SABnzbd Username</span>
@@ -176,7 +176,7 @@ $ignore_word
                                     <span class="component-desc">SABnzbd+ Config -> General -> API Key.</span>
                                 </label>
                             </div>
-                            
+
                             <div class="field-pair">
                                 <label class="nocheck clearfix">
                                     <span class="component-title">SABnzbd Category</span>
@@ -204,7 +204,7 @@ $ignore_word
                                     <span class="component-desc">(eg. localhost:6789)</span>
                                 </label>
                             </div>
-                            
+
                             <div class="field-pair">
                                 <label class="nocheck clearfix">
                                     <span class="component-title">NZBget Password</span>
@@ -227,15 +227,15 @@ $ignore_word
                                 </label>
                             </div>
                         </div>
-                        
+
                         <div class="clearfix"></div>
-                        
+
                         <div class="testNotification" id="testSABnzbd-result">Click below to test.</div>
                         <input type="button" value="Test SABnzbd" id="testSABnzbd" class="btn test-button"/>
                         <input type="submit" class="btn config_submitter" value="Save Changes" /><br/>
-                        
+
                         </div><!-- /content_use_nzbs //-->
-                        
+
                     </fieldset>
                 </div><!-- /component-group2 //-->
 
@@ -257,79 +257,141 @@ $ignore_word
                         </div>
 
                         <div id="content_use_torrents">
-	                        <div class="field-pair">
-		                       	<label class="clearfix" for="torrent_method">
-	                                <span class="component-title jumbo">Torrent Method:</span>
-	                                <span class="component-desc">
-	                                    <select name="use_libtorrent" id="use_libtorrent" class="input-medium" >
-	                                    	<option value="off" label="Black Hole"
-	                                    		#if not $sickbeard.USE_LIBTORRENT then "selected=\"selected\"" else ""#>Black Hole</option>
-	                                    	#if $sickbeard.LIBTORRENT_AVAILABLE:
-	                                    	<option value="on" label="Integrated"
-	                                    		#if $sickbeard.USE_LIBTORRENT then "selected=\"selected\"" else ""#>Integrated</option>
-	                                    	#end if
-	                                    </select>
-	                                </span>
-	                            </label>
-	                        </div>
-	                        
-	                        <div id="torr_bh_settings">
-		                        <div class="field-pair"> 
-		                            <label class="nocheck clearfix">
-		                                <span class="component-title">Torrent Black Hole</span>
-		                                <input type="text" name="torrent_dir" id="torrent_dir" value="$sickbeard.TORRENT_DIR" size="35" />
-		                            </label>
-		                            <label class="nocheck clearfix">
-		                                <span class="component-title">&nbsp;</span>
-		                                <span class="component-desc">The directory where Sick Beard should store your <i>Torrent</i> files.</span>
-		                            </label>
-		                        </div>
-		                    </div>
-		                    
-		                    <div id="libtorrent_settings">
-	                            <div class="field-pair">
-	                                <label class="nocheck clearfix">
-	                                    <span class="component-title">Seed to Ratio</span>
-	                                    <input type="number" name="seed_to_ratio" value="$sickbeard.LIBTORRENT_SEED_TO_RATIO" size="6" min="0.01" step="any" class="input-small" />
-	                                    <span class="component-desc">After download, torrents will be seeded until this ratio is reached.<br />Recommended value: 1.1</span>
-	                                </label>
-	                            </div>
-	
-	                            <div class="field-pair">
-	                                <label class="nocheck clearfix">
-	                                    <span class="component-title">Max Download Speed</span>
-	                                    <input type="number" name="max_dl_speed" 
-	                                    	value="$sickbeard.LIBTORRENT_MAX_DL_SPEED" size="8" min="0" 
-	                                    	class="input-small" /> <span class="component-desc">kB/s (e.g. 500kB/s. 0 means auto)</span>
-	                                </label>
-	                                <label class="nocheck clearfix">
-	                                    <span class="component-title">Max Upload Speed</span>
-	                                    <input type="number" name="max_ul_speed" 
-	                                    	value="$sickbeard.LIBTORRENT_MAX_UL_SPEED" size="8" min="0" 
-	                                    	class="input-small" /> <span class="component-desc">kB/s (e.g. 50kB/s. 0 means auto)</span>
-	                                </label>
-	                            </div>
-	
-	                            <div class="field-pair">
-		                            <label class="nocheck clearfix">
-		                                <span class="component-title">Working Directory</span>
-		                                <input type="text" name="libtorrent_working_dir" id="libtorrent_working_dir" value="$sickbeard.LIBTORRENT_WORKING_DIR" size="35" />
-		                            </label>
-		                            <label class="nocheck clearfix">
-		                                <span class="component-title">&nbsp;</span>
-		                                <span class="component-desc">The directory where temporary (in-progress) files will be stored while
-		                                	downloading/seeding.<br />Please ensure that this directory has sufficient free space (recommended > 3GB).</span>
-		                            </label>
-	                            </div>
-	                        </div>
-	                        
-	                        <div class="clearfix"></div>
-	                        <input type="submit" class="btn config_submitter" value="Save Changes" /><br/>
+                                <div class="field-pair">
+                                        <label class="clearfix" for="torrent_method">
+                                        <span class="component-title jumbo">Torrent Method:</span>
+                                        <span class="component-desc">
+                                            <select name="torrent_method" id="torrent_method" class="input-medium" >
+                                                <option value="blackhole" label="Black Hole"
+                                                        #if not ($sickbeard.USE_LIBTORRENT or $sickbeard.USE_TRANSMISSION) then "selected=\"selected\"" else ""#>Black Hole</option>
+                                                #if $sickbeard.LIBTORRENT_AVAILABLE:
+                                                <option value="libtorrent" label="Integrated"
+                                                        #if $sickbeard.USE_LIBTORRENT then "selected=\"selected\"" else ""#>libtorrent</option>
+                                                #end if
+                                                #if $sickbeard.TRANSMISSIONRPC_AVAILABLE:
+                                                <option value="transmissionrpc" label="Transmission RPC"
+                                                        #if $sickbeard.USE_TRANSMISSION then "selected=\"selected\"" else ""#>Transmission RPC</option>
+                                                #end if
+                                            </select>
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <div id="torr_bh_settings">
+                                        <div class="field-pair">
+                                            <label class="nocheck clearfix">
+                                                <span class="component-title">Torrent Black Hole</span>
+                                                <input type="text" name="torrent_dir" id="torrent_dir" value="$sickbeard.TORRENT_DIR" size="35" />
+                                            </label>
+                                            <label class="nocheck clearfix">
+                                                <span class="component-title">&nbsp;</span>
+                                                <span class="component-desc">The directory where Sick Beard should store your <i>Torrent</i> files.</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                <div id="libtorrent_settings">
+                                    <div class="field-pair">
+                                        <label class="nocheck clearfix">
+                                            <span class="component-title">Seed to Ratio</span>
+                                            <input type="number" name="seed_to_ratio" value="$sickbeard.LIBTORRENT_SEED_TO_RATIO" size="6" min="0.01" step="any" class="input-small" />
+                                            <span class="component-desc">After download, torrents will be seeded until this ratio is reached.<br />Recommended value: 1.1</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="field-pair">
+                                        <label class="nocheck clearfix">
+                                            <span class="component-title">Max Download Speed</span>
+                                            <input type="number" name="max_dl_speed"
+                                                value="$sickbeard.LIBTORRENT_MAX_DL_SPEED" size="8" min="0"
+                                                class="input-small" /> <span class="component-desc">kB/s (e.g. 500kB/s. 0 means auto)</span>
+                                        </label>
+                                        <label class="nocheck clearfix">
+                                            <span class="component-title">Max Upload Speed</span>
+                                            <input type="number" name="max_ul_speed"
+                                                value="$sickbeard.LIBTORRENT_MAX_UL_SPEED" size="8" min="0"
+                                                class="input-small" /> <span class="component-desc">kB/s (e.g. 50kB/s. 0 means auto)</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="field-pair">
+                                            <label class="nocheck clearfix">
+                                                <span class="component-title">Working Directory</span>
+                                                <input type="text" name="libtorrent_working_dir" id="libtorrent_working_dir" value="$sickbeard.LIBTORRENT_WORKING_DIR" size="35" />
+                                            </label>
+                                            <label class="nocheck clearfix">
+                                                <span class="component-title">&nbsp;</span>
+                                                <span class="component-desc">The directory where temporary (in-progress) files will be stored while
+                                                        downloading/seeding.<br />Please ensure that this directory has sufficient free space (recommended > 3GB).</span>
+                                            </label>
+                                    </div>
+                                </div>
+
+                                <div id="transmissionrpc_settings">
+                                    <div class="field-pair">
+                                        <label class="nocheck clearfix">
+                                            <span class="component-title">Transmission host</span>
+                                            <input type="text" name="transmission_host" value="$sickbeard.TRANSMISSION_HOST" size="20" />
+                                        </label>
+                                        <label class="nocheck clearfix">
+                                            <span class="component-title">&nbsp;</span>
+                                            <span class="component-desc">The Transmission server (ip or hostname)</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="field-pair">
+                                        <label class="nocheck clearfix">
+                                            <span class="component-title">Port</span>
+                                            <input type="number" name="transmission_port" value="$sickbeard.TRANSMISSION_PORT" step="any" class="input-small" />
+                                        </label>
+                                        <label class="nocheck clearfix">
+                                            <span class="component-title">&nbsp;</span>
+                                            <span class="component-desc">Connection port the Transmission server is listening on</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="field-pair">
+                                        <label class="nocheck clearfix">
+                                            <span class="component-title">Transmission Username</span>
+                                            <input type="text" name="transmission_user" value="$sickbeard.TRANSMISSION_USER" size="20" />
+                                        </label>
+                                        <label class="nocheck clearfix">
+                                            <span class="component-title">&nbsp;</span>
+                                            <span class="component-desc">Username for your Transmission server (blank for none)</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="field-pair">
+                                        <label class="nocheck clearfix">
+                                            <span class="component-title">Transmission Password</span>
+                                            <input type="password" name="transmission_password" value="$sickbeard.TRANSMISSION_PASSWORD" size="20" />
+                                        </label>
+                                        <label class="nocheck clearfix">
+                                            <span class="component-title">&nbsp;</span>
+                                            <span class="component-desc">Password for your user (blank for none)</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="field-pair">
+                                            <label class="nocheck clearfix">
+                                                <span class="component-title">Download Directory</span>
+                                                <input type="text" name="transmission_download_dir" id="transmission_download_dir" value="$sickbeard.TRANSMISSION_DOWNLOAD_DIR" size="35" />
+                                            </label>
+                                            <label class="nocheck clearfix">
+                                                <span class="component-title">&nbsp;</span>
+                                                <span class="component-desc">The base-directory where TVShows will be downloaded to on the Transmission server.
+                                                        &nbsp;Default is '/tmp', TVShow would be downloaded to '/tmp/<i>tvshow-folder-name-as-set-in-Sick-Beard/Torrent-files</i>'</span>
+                                            </label>
+                                    </div>
+                                </div>
+
+                                <div class="clearfix"></div>
+                                <input type="submit" class="btn config_submitter" value="Save Changes" /><br/>
                         </div><!-- /content_use_torrents //-->
-                        
+
                     </fieldset>
                 </div><!-- /component-group3 //-->
-                
+
                 <div id="core-component-group3" class="component-group clearfix">
 
                     <div class="component-group-desc">
@@ -348,12 +410,12 @@ $ignore_word
                         </div>
 
                         <div id="content_use_vods">
-						<!-- no global settings here yet -->
-                        
+                                                <!-- no global settings here yet -->
+
                         <div class="clearfix"></div>
                         <input type="submit" class="btn config_submitter" value="Save Changes" /><br/>
                         </div><!-- /content_use_vods //-->
-                        
+
                     </fieldset>
                 </div><!-- /component-group3 //-->
 

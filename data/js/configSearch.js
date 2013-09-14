@@ -1,8 +1,8 @@
 $(document).ready(function(){
     var loading = '<img src="'+sbRoot+'/images/loading16.gif" height="16" width="16" />';
-	
+
     $.fn.nzb_method_handler = function() {
-        
+
         var selectedProvider = $('#nzb_method :selected').val();
 
         if (selectedProvider == "blackhole") {
@@ -37,24 +37,31 @@ $(document).ready(function(){
         var sab_username = $("input=[name='sab_username']").val();
         var sab_password = $("input=[name='sab_password']").val();
         var sab_apiKey = $("input=[name='sab_apikey']").val();
-        
-        $.get(sbRoot+"/home/testSABnzbd", {'host': sab_host, 'username': sab_username, 'password': sab_password, 'apikey': sab_apiKey}, 
+
+        $.get(sbRoot+"/home/testSABnzbd", {'host': sab_host, 'username': sab_username, 'password': sab_password, 'apikey': sab_apiKey},
         function (data){ $('#testSABnzbd-result').html(data); });
     });
-    
+
     var onTorrentMethodChange = function() {
-    	switch ($('#use_libtorrent :selected').val())
-    	{
-    	case 'off':	//	blackhole
-    		$('#torr_bh_settings').show();
-    		$('#libtorrent_settings').hide();
-    		break;
-    	case 'on':	//	libtorrent (integrated)
-    		$('#torr_bh_settings').hide();
-    		$('#libtorrent_settings').show();
-    		break;
-    	}
+        switch ($('#torrent_method :selected').val())
+        {
+        case 'blackhole': //  blackhole
+            $('#transmissionrpc_settings').hide();
+            $('#torr_bh_settings').show();
+            $('#libtorrent_settings').hide();
+            break;
+        case 'libtorrent':  //  libtorrent (integrated)
+            $('#transmissionrpc_settings').hide();
+            $('#torr_bh_settings').hide();
+            $('#libtorrent_settings').show();
+            break;
+        case 'transmissionrpc':  //  Transmission RPC (NOT integrated)
+            $('#transmissionrpc_settings').show();
+            $('#torr_bh_settings').hide();
+            $('#libtorrent_settings').hide();
+            break;
+        }
     }
-    $('#use_libtorrent').change(onTorrentMethodChange);
+    $('#torrent_method').change(onTorrentMethodChange);
     onTorrentMethodChange();
 });
