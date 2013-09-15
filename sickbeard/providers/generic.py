@@ -39,7 +39,7 @@ from sickbeard import downloader
 
 from sickbeard.name_parser.parser import NameParser, InvalidNameException
 
-import transmissionrpc as trpc
+from lib.transmissionrpc_lite import TransmissionRPCLite as trpc
 from transmissionrpc import TransmissionError
 
 class GenericProvider:
@@ -593,13 +593,10 @@ class TorrentProvider(GenericProvider):
             logger.log(u'Using Transmission RPC with torrent link: ' + result.url, logger.DEBUG)
             try:
                 # Transmission
-                tc = trpc.Client(address=sickbeard.TRANSMISSION_HOST , \
+                tc = trpc(host=sickbeard.TRANSMISSION_HOST , \
                                         port=sickbeard.TRANSMISSION_PORT, \
-                                        user=sickbeard.TRANSMISSION_USER, \
+                                        username=sickbeard.TRANSMISSION_USER, \
                                         password=sickbeard.TRANSMISSION_PASSWORD)
-
-                # transmissions default download dir (server side path!)
-                #~ transmission_download_dir = os.path.normpath(tc.session_stats().download_dir)
 
                 # sickbeards TVShow directory
                 tvshow_basename = os.path.basename(os.path.normpath(download_dir))
@@ -607,10 +604,10 @@ class TorrentProvider(GenericProvider):
                 # download dir
                 show_dir = os.path.join(sickbeard.TRANSMISSION_DOWNLOAD_DIR, tvshow_basename)
 
-                logger.log(u"Downloading a result to '" + show_dir + "'")
+                logger.log(u"Downloading a result to '" + show_dir + "'", logger.DEBUG)
 
                 # add torrent
-                tc.add_uri(str(result.url), download_dir=str(show_dir))
+                tc.add_torrent_uri(str(result.url), {'download-dir': str(show_dir)})
                 return True
 
             except Exception as e:
