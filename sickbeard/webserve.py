@@ -66,7 +66,7 @@ try:
 except ImportError:
     import xml.etree.ElementTree as etree
 
-from sickbeard import browser
+from sickbeard import browser, logger
 
 
 class PageTemplate (Template):
@@ -94,7 +94,7 @@ class PageTemplate (Template):
             self.sbHttpsPort = self.sbHttpPort
         if "X-Forwarded-Proto" in cherrypy.request.headers:
             self.sbHttpsEnabled = True if cherrypy.request.headers['X-Forwarded-Proto'] == 'https' else False
-            
+
         downloadPageTitle = u'Downloads'
         if sickbeard.USE_LIBTORRENT and len(downloader.running_torrents):
             downloadPageTitle += ' (%d)' % (len(downloader.running_torrents), )
@@ -105,7 +105,7 @@ class PageTemplate (Template):
             logPageTitle += ' ('+str(len(classes.ErrorViewer.errors))+')'
         self.logPageTitle = logPageTitle
         self.sbPID = str(sickbeard.PID)
-        
+
         # is this even used?  Menu appears to be hardcoded in inc_top.tmpl?
         self.menu = [
             { 'title': 'Home',            'key': 'home'           },
@@ -115,7 +115,7 @@ class PageTemplate (Template):
             { 'title': 'Config',          'key': 'config'         },
             { 'title': logPageTitle,      'key': 'errorlogs'      },
         ]
-        
+
         if sickbeard.USE_LIBTORRENT:
             self.menu.insert(2, {'title': downloadPageTitle, 'key': 'downloads' })
 
@@ -787,16 +787,18 @@ class ConfigSearch:
                        sab_apikey=None, sab_category=None, sab_host=None, nzbget_password=None, nzbget_category=None, nzbget_host=None,
                        torrent_dir=None, nzb_method=None, usenet_retention=None, search_frequency=None, download_propers=None,
                        use_libtorrent=None, seed_to_ratio=None, max_dl_speed=None, max_ul_speed=None, libtorrent_working_dir=None,
-                       ignore_words=None):
+                       ignore_words=None, **kwargs):
 
         results = []
+        #~ for key in kwargs:
+            #~ logger.log(u'saveSearch another keyword arg: %s: %s' % (key, kwargs[key]))
 
         if not config.change_NZB_DIR(nzb_dir):
             results += ["Unable to create directory " + os.path.normpath(nzb_dir) + ", dir not changed."]
 
         if not config.change_TORRENT_DIR(torrent_dir):
             results += ["Unable to create directory " + os.path.normpath(torrent_dir) + ", dir not changed."]
-            
+
         if libtorrent_working_dir != sickbeard.LIBTORRENT_WORKING_DIR:
             #@todo: implement this!
             msg = u'Unable to change the libtorrent working directory while running (NOT IMPLEMENTED). ' + \
@@ -806,13 +808,13 @@ class ConfigSearch:
             results += [msg]
 
         config.change_SEARCH_FREQUENCY(search_frequency)
-        
-        use_libtorrent = 1 if use_libtorrent == 'on' else 0
-        
+
+        #~ use_libtorrent = 1 if use_libtorrent == 'on' else 0
+
         try:
             seed_to_ratio = 1.1 if seed_to_ratio == "" else float(seed_to_ratio)
             if seed_to_ratio <= 0.0:
-                seed_to_ratio = 0.0 
+                seed_to_ratio = 0.0
                 logger.log(u'You have set your seed ratio to 0.  This makes you all take, with no give.  ' + \
                     u'Please feel appropriately guilty for a moment, and do something nice for someone to make up for it.', logger.MESSAGE)
         except Exception, e:
@@ -820,30 +822,30 @@ class ConfigSearch:
             logger.log(msg + ': ' + ex(e), logger.ERROR)
             results += [msg]
             seed_to_ratio = 1.1
-            
+
         try:
             max_dl_speed = 0 if max_dl_speed == "" else int(max_dl_speed)
-            if max_dl_speed < 0: 
+            if max_dl_speed < 0:
                 max_dl_speed = 0
         except Exception, e:
             msg = u'Unable to make an int from "%s", setting max_dl_speed to 0 (auto)' % (max_dl_speed,)
             logger.log(msg + u': ' + ex(e), logger.ERROR)
             results += [msg]
             max_dl_speed = 0
-            
+
         config.change_LIBTORRENT_DL_SPEED(max_dl_speed)
-        
-            
+
+
         try:
             max_ul_speed = 0 if max_ul_speed == "" else int(max_ul_speed)
-            if max_ul_speed < 0: 
+            if max_ul_speed < 0:
                 max_ul_speed = 0
         except Exception, e:
             msg = u'Unable to make an int from "%s", setting max_ul_speed to 0 (auto)' % (max_ul_speed)
             logger.log(msg + u': ' + ex(e), logger.ERROR)
             results += [msg]
             max_ul_speed = 0
-            
+
         config.change_LIBTORRENT_UL_SPEED(max_ul_speed)
 
         if download_propers == "on":
@@ -860,7 +862,7 @@ class ConfigSearch:
             use_torrents = 1
         else:
             use_torrents = 0
-            
+
         if use_vods == "on":
             use_vods = 1
         else:
@@ -868,7 +870,7 @@ class ConfigSearch:
 
         if usenet_retention == None:
             usenet_retention = 500
-            
+
         ignore_words = [w for w in ignore_words.strip().splitlines() if w.strip() <> '']
         sickbeard.IGNORE_WORDS = ','.join(ignore_words)
 
@@ -901,10 +903,48 @@ class ConfigSearch:
         sickbeard.NZBGET_PASSWORD = nzbget_password
         sickbeard.NZBGET_CATEGORY = nzbget_category
         sickbeard.NZBGET_HOST = nzbget_host
-        
-        
-        sickbeard.USE_LIBTORRENT = use_libtorrent
+
+
+        #~ sickbeard.USE_LIBTORRENT = use_libtorrent
         sickbeard.LIBTORRENT_SEED_TO_RATIO = seed_to_ratio
+
+
+        for key in kwargs:
+            if key.lower() == 'torrent_method':
+                    sickbeard.TORRENT_METHOD = kwargs[key]
+
+                    sickbeard.USE_LIBTORRENT = 0
+                    sickbeard.USE_TRANSMISSION = 0
+
+                    if kwargs[key].lower() == 'libtorrent':
+                        sickbeard.USE_LIBTORRENT = 1
+                    elif kwargs[key].lower() == 'transmissionrpc':
+                        sickbeard.USE_TRANSMISSION = 1
+
+            elif key.lower() == 'transmission_download_dir':
+                    sickbeard.TRANSMISSION_DOWNLOAD_DIR = kwargs[key]
+
+            elif key.lower() == 'transmission_host':
+                    sickbeard.TRANSMISSION_HOST = kwargs[key]
+
+            elif key.lower() == 'transmission_password':
+                    sickbeard.TRANSMISSION_PASSWORD = kwargs[key]
+
+            elif key.lower() == 'transmission_port':
+                    try:
+                        sickbeard.TRANSMISSION_PORT = 9091 if kwargs[key] == "" else int(kwargs[key])
+
+                        if sickbeard.TRANSMISSION_PORT < 1:
+                            raise Exception('Port number lower than zero')
+
+                    except Exception, e:
+                        msg = u'Unable to make an int from "%s", setting transmission port to 9091' % (kwargs[key])
+                        logger.log(msg + u': ' + ex(e), logger.ERROR)
+                        results += [msg]
+                        sickbeard.TRANSMISSION_PORT = 9091
+
+            elif key.lower() == 'transmission_user':
+                    sickbeard.TRANSMISSION_USER = kwargs[key]
 
 
         sickbeard.save_config()
@@ -1072,7 +1112,7 @@ class ConfigProviders:
             return json.dumps({'error': 'Exists as '+providerDict[tempProvider.getID()].name})
         else:
             return json.dumps({'success': tempProvider.getID()})
-        
+
     @cherrypy.expose
     def canAddAnyRssProvider(self, name, url):
 
@@ -1117,7 +1157,7 @@ class ConfigProviders:
             newProvider = newznab.NewznabProvider(name, url, key)
             sickbeard.newznabProviderList.append(newProvider)
             return newProvider.getID() + '|' + newProvider.configStr()
-        
+
     @cherrypy.expose
     def saveAnyRssProvider(self, name, url):
 
@@ -1155,7 +1195,7 @@ class ConfigProviders:
             sickbeard.PROVIDER_ORDER.remove(id)
 
         return '1'
-    
+
     @cherrypy.expose
     def deleteAnyRssProvider(self, id):
 
@@ -1197,16 +1237,16 @@ class ConfigProviders:
         # add all the newznab info we got into our list
         if newznab_string:
             for curNewznabProviderStr in newznab_string.split('!!!'):
-    
+
                 if not curNewznabProviderStr:
                     continue
-    
+
                 curName, curURL, curKey = curNewznabProviderStr.split('|')
-    
+
                 newProvider = newznab.NewznabProvider(curName, curURL, curKey)
-    
+
                 curID = newProvider.getID()
-    
+
                 # if it already exists then update it
                 if curID in newznabProviderDict:
                     newznabProviderDict[curID].name = curName
@@ -1214,38 +1254,38 @@ class ConfigProviders:
                     newznabProviderDict[curID].key = curKey
                 else:
                     sickbeard.newznabProviderList.append(newProvider)
-    
+
                 finishedNames.append(curID)
-    
+
             # delete anything that is missing
             for curProvider in sickbeard.newznabProviderList:
                 if curProvider.getID() not in finishedNames:
                     sickbeard.newznabProviderList.remove(curProvider)
-                    
+
         finishedNames = []
         #logger.log(u"anyrss_string =  " + anyrss_string)
-                    
+
         if anyrss_string:
             for curAnyRssProviderStr in anyrss_string.split('!!!'):
-    
+
                 if not curAnyRssProviderStr:
                     continue
-    
+
                 curName, curURL = curAnyRssProviderStr.split('|||')
-    
+
                 newProvider = anyrss.AnyRssProvider(curName, curURL)
-    
+
                 curID = newProvider.getID()
-    
+
                 # if it already exists then update it
                 if curID in anyRssProviderDict:
                     anyRssProviderDict[curID].name = curName
                     anyRssProviderDict[curID].url = curURL
                 else:
                     sickbeard.anyRssProviderList.append(newProvider)
-    
+
                 finishedNames.append(curID)
-    
+
         # delete anything that is missing
         #logger.log(u"sickbeard.anyRssProviderList =  " + repr(sickbeard.anyRssProviderList))
         for curProvider in sickbeard.anyRssProviderList:
@@ -2142,7 +2182,7 @@ class ErrorLogs:
         t.minLevel = minLevel
 
         return _munge(t)
-    
+
 class Downloads:
 
     @cherrypy.expose
@@ -2156,11 +2196,11 @@ class Downloads:
         result = []
         for t in downloader.get_running_torrents():
             # we only return the useful info
-            
+
             eps = []
             for ep in t['episodes']:
                 eps.append({'tvdbid': ep.show.tvdbid, 'season': ep.season, 'episode': ep.episode })
-            
+
             result.append({
                 'key'       : t['key'],
                 'name'      : t['name'],
@@ -2177,7 +2217,7 @@ class Downloads:
             })
 
         return json.dumps(result)
-    
+
     @cherrypy.expose
     def deleteTorrent(self, key=None):
         result = { 'success': True }
@@ -2186,18 +2226,18 @@ class Downloads:
             result['success'] = False
             result['errorMessage'] = errorMessage
         return json.dumps(result)
-    
+
     @cherrypy.expose
     def dlgAddTorrent(self):
         t = PageTemplate(file="dlgAddTorrent.tmpl")
         return _munge(t)
-    
+
     @cherrypy.expose
     def addTorrentByUrl(self, url=None):
         cherrypy.response.headers['Content-Type'] = 'application/json'
         result = { 'success': True }
         torrent = None
-        
+
         if not url:
             result['success'] = False
             result['errorMessage'] = u'URL not supplied'
@@ -2213,7 +2253,7 @@ class Downloads:
             else:
                 result['success'] = False
                 result['errorMessage'] = u'http, https, or magnet link required.'
-                
+
         if torrent:
             result['success'] = downloader.download_from_torrent(torrent=torrent)
             if not result['success']:
@@ -2575,12 +2615,12 @@ class Home:
 
         t.epCounts = epCounts
         t.epCats = epCats
-        
-        #t.all_scene_exceptions = list(set((get_scene_exceptions(showObj.tvdbid) or []) + (get_custom_exceptions(showObj.tvdbid) or []))) 
+
+        #t.all_scene_exceptions = list(set((get_scene_exceptions(showObj.tvdbid) or []) + (get_custom_exceptions(showObj.tvdbid) or [])))
         t.all_scene_exceptions = get_scene_exceptions(showObj.tvdbid)
         t.scene_numbering = get_scene_numbering_for_show(showObj.tvdbid)
         t.xem_numbering = get_xem_numbering_for_show(showObj.tvdbid)
-        
+
         #logger.log(u'Home.displayShow with t = ' + pprint.pformat(vars(t)) , logger.DEBUG)
 
         return _munge(t)
@@ -2601,7 +2641,7 @@ class Home:
                 return _genericMessage("Error", errString)
 
         showObj = sickbeard.helpers.findCertainShow(sickbeard.showList, int(show))
-        
+
         logger.log(u'Home.editShow with showObj = ' + str(showObj) , logger.DEBUG)
 
         if showObj == None:
@@ -2617,7 +2657,7 @@ class Home:
             t.submenu = HomeMenu()
             with showObj.lock:
                 t.show = showObj
-                
+
             t.scene_exceptions = get_scene_exceptions(showObj.tvdbid, True)
             t.custom_exceptions = get_custom_exceptions(showObj.tvdbid)
 
@@ -2650,16 +2690,16 @@ class Home:
             do_update = False
         else:
             do_update = True
-            
+
 
         # Make custom_exceptions into a tidy list of names
         if custom_exceptions == None:
             custom_exceptions = []
         else:
             custom_exceptions = [el for el in custom_exceptions.strip().splitlines() if el.strip() <> '']
-            
+
         set_custom_exceptions(showObj.tvdbid, custom_exceptions)
-            
+
 
         if type(anyQualities) != list:
             anyQualities = [anyQualities]
@@ -3009,38 +3049,38 @@ class Home:
             return json.dumps({'result': statusStrings[ep_obj.status]})
 
         return json.dumps({'result': 'failure'})
-    
-    
+
+
     @cherrypy.expose
     def setEpisodeSceneNumbering(self, show, forSeason, forEpisode, sceneSeason=None, sceneEpisode=None):
 
         # sanitize:
         if sceneSeason in ['null', '']: sceneSeason = None
         if sceneEpisode in ['null', '']: sceneEpisode = None
-        
-        result = { 
+
+        result = {
             'success': True,
             'forSeason': forSeason,
             'forEpisode': forEpisode,
         }
-        
-        # retrieve the episode object and fail if we can't get one 
+
+        # retrieve the episode object and fail if we can't get one
         ep_obj = _getEpisode(show, forSeason, forEpisode)
         if isinstance(ep_obj, str):
             result['success'] = False
             result['errorMessage'] = ep_obj
         else:
-            logger.log(u"setEpisodeSceneNumbering for %s from %sx%s to %sx%s" % 
+            logger.log(u"setEpisodeSceneNumbering for %s from %sx%s to %sx%s" %
                        (show, forSeason, forEpisode, sceneSeason, sceneEpisode), logger.DEBUG)
             #logger.log(u'episode is' + pprint.pformat(vars(ep_obj)), logger.DEBUG)
-            
+
             forSeason = int(forSeason)
             forEpisode = int(forEpisode)
             if sceneSeason is not None: sceneSeason = int(sceneSeason)
             if sceneEpisode is not None: sceneEpisode = int(sceneEpisode)
-            
+
             set_scene_numbering(show, forSeason, forEpisode, sceneSeason, sceneEpisode)
-            
+
         sn = find_scene_numbering(show, forSeason, forEpisode)
         if sn:
             (result['sceneSeason'], result['sceneEpisode']) = sn
@@ -3232,7 +3272,7 @@ class WebInterface:
     config = Config()
 
     home = Home()
-    
+
     downloads = Downloads()
 
     api = Api()
