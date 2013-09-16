@@ -80,7 +80,6 @@ class TransmissionRPCLite(object):
 
     def add_torrent_uri(self, torrent, arguments):
         arguments['filename'] = torrent
-        print (str(arguments))
         post_data = {'arguments': arguments, 'method': 'torrent-add', 'tag': self.tag}
         return self._request(post_data)
 
