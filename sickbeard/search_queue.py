@@ -136,7 +136,13 @@ class RSSSearchQueueItem(generic_queue.QueueItem):
             logger.log(u"No needed episodes found on the RSS feeds")
         else:
             for curResult in foundResults:
-                search.snatchEpisode(curResult)
+                #FUGLY, but it works:
+                try:
+                    download_dir = curResult.episodes[0].show._location
+                except:
+                    download_dir = None
+
+                search.snatchEpisode(curResult, download_dir=download_dir)
                 time.sleep(2)
 
         generic_queue.QueueItem.finish(self)

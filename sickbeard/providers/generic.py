@@ -598,16 +598,19 @@ class TorrentProvider(GenericProvider):
                                         username=sickbeard.TRANSMISSION_USER, \
                                         password=sickbeard.TRANSMISSION_PASSWORD)
 
-                # sickbeards TVShow directory
-                tvshow_basename = os.path.basename(os.path.normpath(download_dir))
+                tc_args = {}
+                if download_dir is not None:
+                    # sickbeards TVShow directory
+                    tvshow_basename = os.path.basename(os.path.normpath(download_dir))
 
-                # download dir
-                show_dir = os.path.join(sickbeard.TRANSMISSION_DOWNLOAD_DIR, tvshow_basename)
+                    # download dir
+                    show_dir = os.path.join(sickbeard.TRANSMISSION_DOWNLOAD_DIR, tvshow_basename)
+                    tc_args['download-dir'] = str(show_dir)
 
-                logger.log(u"Downloading a result to '" + show_dir + "'", logger.DEBUG)
+                    logger.log(u"Downloading a result to '" + show_dir + "'", logger.DEBUG)
 
                 # add torrent
-                tc.add_torrent_uri(str(result.url), {'download-dir': str(show_dir)})
+                tc.add_torrent_uri(str(result.url), tc_args)
                 return True
 
             except Exception as e:
