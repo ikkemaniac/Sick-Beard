@@ -24,7 +24,7 @@ import sickbeard
 
 from lib.tvdb_api import tvdb_exceptions, tvdb_api
 
-from sickbeard.common import SKIPPED, WANTED
+from sickbeard.common import SKIPPED, WANTED, GET_FIRST_EP
 
 from sickbeard.tv import TVShow
 from sickbeard import exceptions, logger, ui, db
@@ -305,13 +305,18 @@ class QueueItemAdd(ShowQueueItem):
             logger.log(traceback.format_exc(), logger.DEBUG)
 
         # if they gave a custom status then change all the eps to it
-        if self.default_status != SKIPPED:
+        if self.default_status == GET_FIRST_EP:
+            logger.log(u"Setting all episodes to 'skipped' except S01E01; set that one to 'wanted'")
+            myDB = db.DBConnection()
+            myDB.action("UPDATE tv_episodes SET status = ? WHERE showid = ? AND season = 1 AND episode = 1", [WANTED, self.show.tvdbid])
+
+        elif self.default_status != SKIPPED:
             logger.log(u"Setting all episodes to the specified default status: " + str(self.default_status))
             myDB = db.DBConnection()
             myDB.action("UPDATE tv_episodes SET status = ? WHERE status = ? AND showid = ? AND season != 0", [self.default_status, SKIPPED, self.show.tvdbid])
 
         # if they started with WANTED eps then run the backlog
-        if self.default_status == WANTED:
+        if self.default_status == WANTED or self.default_status == GET_FIRST_EP:
             logger.log(u"Launching backlog for this show since its episodes are WANTED")
             sickbeard.backlogSearchScheduler.action.searchBacklog([self.show]) #@UndefinedVariable
 

@@ -4,7 +4,7 @@
             <label for="statusSelect" class="nocheck clearfix">
                 <span class="component-title">
                     <select name="defaultStatus" id="statusSelect">
-                    #for $curStatus in [$SKIPPED, $WANTED, $ARCHIVED, $IGNORED]:
+                    #for $curStatus in [$SKIPPED, $WANTED, $ARCHIVED, $IGNORED, $GET_FIRST_EP]:
                         <option value="$curStatus" #if $sickbeard.STATUS_DEFAULT == $curStatus then 'selected="selected"' else ''#>$statusStrings[$curStatus]</option>
                     #end for
                     </select>
