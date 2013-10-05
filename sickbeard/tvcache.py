@@ -26,6 +26,7 @@ from sickbeard import db
 from sickbeard import logger
 from sickbeard.common import Quality
 
+from sickbeard import ui
 from sickbeard import helpers, show_name_helpers
 from sickbeard import name_cache
 from sickbeard.exceptions import ex, AuthException
@@ -315,6 +316,10 @@ class TVCache():
                 return False
 
         episodeText = "|" + "|".join(map(str, episodes)) + "|"
+
+        if season == 1 and (1 in episodes):
+            msg = "Torrent name: " + name
+            ui.notifications.error("New show found", msg)
 
         # get the current timestamp
         curTimestamp = int(time.mktime(datetime.datetime.today().timetuple()))
